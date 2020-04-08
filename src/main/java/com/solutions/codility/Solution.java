@@ -1,7 +1,7 @@
 package com.solutions.codility;
 
 public class Solution {
- int solution(int[] A){
-	return 42;
- }
+    public int solution(int[] A) {
+        return 42;
+    }
 }
