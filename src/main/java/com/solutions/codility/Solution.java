@@ -1,22 +1,15 @@
 package com.solutions.codility;
 
-import java.util.Arrays;
+import java.util.stream.IntStream;
 
 public class Solution {
     public int solution(int[] A) {
-        Arrays.sort(A);
-        int result = 1;
-        for (int i : A) {
-            if (i < result) {
-                continue;
-            }
-            else if (i == result) {
-                result++;
-            }
-            else if (i > result) {
-                break;
+        int[] B = IntStream.of(A).filter(x -> x > 0).sorted().distinct().toArray();
+        for (int i = 0; i < B.length; i++) {
+            if (i + 1 != B[i]) {
+                return i + 1;
             }
         }
-        return result;
+        return B.length + 1;
     }
 }
