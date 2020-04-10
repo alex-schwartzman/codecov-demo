@@ -1,18 +1,26 @@
 package com.solutions.codility;
 
-import java.util.Arrays;
 import java.util.stream.IntStream;
 
 public class Solution {
     public int solution(int[] H) {
-        return IntStream.range(1, H.length).parallel().map(index -> coverAllByTwoBanners(H, index)).min().getAsInt();
-    }
+        int[] rightMaxValues = new int[H.length];
+        int[] leftMaxValues = new int[H.length];
+        int leftCurrentMax = Integer.MIN_VALUE;
+        int rightCurrentMax = Integer.MIN_VALUE;
+        for (int i = 0; i < H.length - 1; i++) {
+            leftCurrentMax = Math.max(leftCurrentMax, H[i]);
+            rightCurrentMax = Math.max(rightCurrentMax, H[H.length - 1 - i]);
+            leftMaxValues[i + 1] = leftCurrentMax; //sorry, 1-based array :)
+            rightMaxValues[i + 1] = rightCurrentMax;
+        }
 
-    private int coverAllByTwoBanners(int[] H, int index) {
-        final int leftSideMaxHeight = Arrays.stream(H).limit(index).max().getAsInt();
-        final int rightSideMaxHeight = Arrays.stream(H).skip(index).max().getAsInt();
-        final int leftSideWidth = index;
-        final int rightSideWidth = H.length - index;
-        return leftSideMaxHeight * leftSideWidth + rightSideMaxHeight * rightSideWidth;
+        return IntStream.range(1, H.length).map(index -> {
+            final int leftSideWidth = index;
+            final int rightSideWidth = H.length - index;
+            final int leftSideMaxHeight = leftMaxValues[leftSideWidth];
+            final int rightSideMaxHeight = rightMaxValues[rightSideWidth];
+            return leftSideMaxHeight * leftSideWidth + rightSideMaxHeight * rightSideWidth;
+        }).min().getAsInt();
     }
 }

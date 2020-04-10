@@ -37,26 +37,26 @@ public class SolutionTest {
 
     @Test
     public void performanceTest100() {
-        int[] input = new Random(42).ints(100).toArray();
-        new Solution().solution(input);
+        int[] input = new Random(42).ints(100, 1, 10000).toArray();
+        assertEquals(989177, new Solution().solution(input));
     }
 
     @Test
     public void performanceTest1000() {
-        int[] input = new Random(42).ints(1000).toArray();
-        new Solution().solution(input);
+        int[] input = new Random(42).ints(1000, 1, 10000).toArray();
+        assertEquals(9980960, new Solution().solution(input));
     }
 
     @Test
     public void performanceTest10000() {
-        int[] input = new Random(42).ints(10000).toArray();
-        new Solution().solution(input);
+        int[] input = new Random(42).ints(10000, 1, 10000).toArray();
+        assertEquals(99954540, new Solution().solution(input));
     }
 
     @Test
     public void performanceTest100000() {
-        int[] input = new Random(42).ints(100000).toArray();
-        new Solution().solution(input);
+        int[] input = new Random(42).ints(100000, 1, 10000).toArray();
+        assertEquals(999887758, new Solution().solution(input));
     }
 
     @Test
