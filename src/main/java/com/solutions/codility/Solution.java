@@ -1,18 +1,18 @@
 package com.solutions.codility;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 public class Solution {
-    public int solution(int[] A) {
-        AtomicInteger result = new AtomicInteger(1);
+    public int solution(int[] H) {
+        return IntStream.range(1, H.length).map(index -> coverAllByTwoBanners(H, index)).min().getAsInt();
+    }
 
-        //Fancy stream-only way, potentially buggy, and anti-functional (in functional programming we avoid side effects, whereas here we utilize a side-effect of rewriting result)
-        IntStream.of(A).filter(x -> x > 0).sorted().distinct().forEachOrdered(i -> {
-            if (i == result.get()) {
-                result.set(i + 1);
-            }
-        });
-        return result.get();
+    private int coverAllByTwoBanners(int[] H, int index) {
+        final int leftSideMaxHeight = Arrays.stream(H).limit(index).max().getAsInt();
+        final int rightSideMaxHeight = Arrays.stream(H).skip(index).max().getAsInt();
+        final int leftSideWidth = index;
+        final int rightSideWidth = H.length - index;
+        return leftSideMaxHeight * leftSideWidth + rightSideMaxHeight * rightSideWidth;
     }
 }
