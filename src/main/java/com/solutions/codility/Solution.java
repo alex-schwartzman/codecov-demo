@@ -1,9 +1,16 @@
 package com.solutions.codility;
 
-import java.util.stream.IntStream;
-
+//final solution with award: https://app.codility.com/cert/view/cert3WKPWB-QFMAHUYMENFESZFQ/
 public class Solution {
     public int solution(int[] H) {
+        if (H.length == 0) {
+            return 0;
+        }
+
+        if (H.length == 1) {
+            return H[0];
+        }
+
         int[] rightMaxValues = new int[H.length];
         int[] leftMaxValues = new int[H.length];
         int leftCurrentMax = Integer.MIN_VALUE;
@@ -15,12 +22,15 @@ public class Solution {
             rightMaxValues[i + 1] = rightCurrentMax;
         }
 
-        return IntStream.range(1, H.length).map(index -> {
+        int minArea = Integer.MAX_VALUE;
+        for (int index = 1; index < H.length; index++) {
             final int leftSideWidth = index;
             final int rightSideWidth = H.length - index;
             final int leftSideMaxHeight = leftMaxValues[leftSideWidth];
             final int rightSideMaxHeight = rightMaxValues[rightSideWidth];
-            return leftSideMaxHeight * leftSideWidth + rightSideMaxHeight * rightSideWidth;
-        }).min().getAsInt();
+            final int currentArea = leftSideMaxHeight * leftSideWidth + rightSideMaxHeight * rightSideWidth;
+            minArea = Math.min(currentArea, minArea);
+        }
+        return minArea;
     }
 }

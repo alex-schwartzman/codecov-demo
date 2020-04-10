@@ -64,4 +64,14 @@ public class SolutionTest {
         assertEquals(3, new Solution().solution(new int[]{2, 1}));
     }
 
+    @Test
+    public void oneBuildingTest() {
+        assertEquals(3, new Solution().solution(new int[]{3}));
+    }
+
+    @Test
+    public void emptyBuildingsArray() {
+        assertEquals(0, new Solution().solution(new int[]{}));
+    }
+
 }
