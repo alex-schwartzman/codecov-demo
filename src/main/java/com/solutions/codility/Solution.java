@@ -5,7 +5,7 @@ import java.util.stream.IntStream;
 
 public class Solution {
     public int solution(int[] H) {
-        return IntStream.range(1, H.length).map(index -> coverAllByTwoBanners(H, index)).min().getAsInt();
+        return IntStream.range(1, H.length).parallel().map(index -> coverAllByTwoBanners(H, index)).min().getAsInt();
     }
 
     private int coverAllByTwoBanners(int[] H, int index) {

@@ -2,6 +2,10 @@ package com.solutions.codility;
 
 import org.junit.Test;
 
+import java.util.Random;
+import java.util.function.IntSupplier;
+import java.util.stream.IntStream;
+
 import static org.junit.Assert.assertEquals;
 
 public class SolutionTest {
@@ -30,4 +34,34 @@ public class SolutionTest {
     public void testAsDescribedInTask5() {
         assertEquals(30, new Solution().solution(new int[]{1, 1, 7, 6, 6, 6}));
     }
+
+    @Test
+    public void performanceTest100() {
+        int[] input = new Random(42).ints(100).toArray();
+        new Solution().solution(input);
+    }
+
+    @Test
+    public void performanceTest1000() {
+        int[] input = new Random(42).ints(1000).toArray();
+        new Solution().solution(input);
+    }
+
+    @Test
+    public void performanceTest10000() {
+        int[] input = new Random(42).ints(10000).toArray();
+        new Solution().solution(input);
+    }
+
+    @Test
+    public void performanceTest100000() {
+        int[] input = new Random(42).ints(100000).toArray();
+        new Solution().solution(input);
+    }
+
+    @Test
+    public void twoBuildingsTest() {
+        assertEquals(3, new Solution().solution(new int[]{2, 1}));
+    }
+
 }
