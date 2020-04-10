@@ -141,8 +141,8 @@ public class SolutionTest {
         int[] X = new int[size];
         int[] Y = new int[size];
         int sprinklersCount = 0;
-        for (int x = size-spotSize; x < size; x++) {
-            for (int y = size-spotSize; y < size; y++) {
+        for (int x = size - spotSize; x < size; x++) {
+            for (int y = size - spotSize; y < size; y++) {
                 X[sprinklersCount] = x + 1;
                 Y[sprinklersCount] = y + 1;
                 sprinklersCount++;
@@ -158,8 +158,8 @@ public class SolutionTest {
         int[] X = new int[size];
         int[] Y = new int[size];
         int sprinklersCount = 0;
-        for (int x = size-spotSize; x < size; x++) {
-            for (int y = size-spotSize; y < size; y++) {
+        for (int x = size - spotSize; x < size; x++) {
+            for (int y = size - spotSize; y < size; y++) {
                 X[sprinklersCount] = x + 1;
                 Y[sprinklersCount] = y + 1;
                 sprinklersCount++;
@@ -168,5 +168,57 @@ public class SolutionTest {
         assertEquals(8, new Solution().solution(X, Y));
     }
 
+    @Test
+    public void testPerformanceAllInOppositeSpot30() {
+        final int spotSize = 30;
+        final int size = spotSize * spotSize;
+        int[] X = new int[size];
+        int[] Y = new int[size];
+        int sprinklersCount = 0;
+        for (int x = size - spotSize; x < size; x++) {
+            for (int y = size - spotSize; y < size; y++) {
+                X[sprinklersCount] = x + 1;
+                Y[sprinklersCount] = y + 1;
+                sprinklersCount++;
+            }
+        }
+        assertEquals(783000, new Solution().solution(X, Y));
+    }
+
+    @Test
+    public void testPerformanceAllInOppositeSpot100() {
+        final int spotSize = 100;
+        final int size = spotSize * spotSize;
+        int[] X = new int[size];
+        int[] Y = new int[size];
+        int sprinklersCount = 0;
+        for (int x = size - spotSize; x < size; x++) {
+            for (int y = size - spotSize; y < size; y++) {
+                X[sprinklersCount] = x + 1;
+                Y[sprinklersCount] = y + 1;
+                sprinklersCount++;
+            }
+        }
+        assertEquals(99000000, new Solution().solution(X, Y));
+    }
+
+    @Test
+    public void testPerformanceAllInCenterSpot100() {
+        final int spotSize = 100;
+        final int size = spotSize * spotSize;
+        int[] X = new int[size];
+        int[] Y = new int[size];
+        int sprinklersCount = 0;
+        int x0 = size / 2 - spotSize / 2;
+        int y0 = size / 2 - spotSize / 2;
+        for (int x = x0; x < x0 + spotSize; x++) {
+            for (int y = y0; y < y0 + spotSize; y++) {
+                X[sprinklersCount] = x + 1;
+                Y[sprinklersCount] = y + 1;
+                sprinklersCount++;
+            }
+        }
+        assertEquals(49500000, new Solution().solution(X, Y));
+    }
 
 }

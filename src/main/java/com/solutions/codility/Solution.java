@@ -3,6 +3,7 @@ package com.solutions.codility;
 import java.util.*;
 
 //https://app.codility.com/programmers/task/sprinklers_arrangement/
+//Solution turns out to be N^2
 public class Solution {
     public static class Coord {
         public int column, row;
@@ -28,7 +29,6 @@ public class Solution {
     }
 
     int stepsCount = 0;
-    Set<Coord> sprinklers = new HashSet<>();
     Map<Integer, Set<Integer>> rows = new HashMap<>();
     Map<Integer, Set<Integer>> columns = new HashMap<>();
     int fieldSize;
@@ -131,13 +131,11 @@ public class Solution {
     }
 
     private void addSprinkler(Coord coord) {
-        sprinklers.add(coord);
         columns.get(coord.column).add(coord.row);
         rows.get(coord.row).add(coord.column);
     }
 
     private void removeSprinkler(Coord coord) {
-        sprinklers.remove(coord);
         columns.get(coord.column).remove(coord.row);
         rows.get(coord.row).remove(coord.column);
     }
