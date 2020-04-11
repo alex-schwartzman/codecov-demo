@@ -5,7 +5,7 @@ public class Solution {
     private int width;
     private int height;
 
-    byte[][] knownDirectionsMap;
+    int[][] knownDirectionsMap;
     static final byte DOWN = 1;
     static final byte RIGHT = 2;
     static final byte UNDEFINED = 0;
@@ -13,7 +13,7 @@ public class Solution {
     public String solution(int[][] A) {
         width = A[0].length;
         height = A.length;
-        knownDirectionsMap = new byte[height][width];
+        knownDirectionsMap = new int[height][width];
         for (int i = 0; i < width - 1; i++) {
             knownDirectionsMap[height - 1][i] = RIGHT;
         }
@@ -34,7 +34,7 @@ public class Solution {
         int column = 0;
         while (knownDirectionsMap[height - 1][width - 1] == UNDEFINED) {
             while (knownDirectionsMap[row][column] != UNDEFINED) {
-                byte direction = knownDirectionsMap[row][column];
+                int direction = knownDirectionsMap[row][column];
                 if (direction == RIGHT) {
                     column++;
                 }
@@ -54,7 +54,7 @@ public class Solution {
         knownDirectionsMap[height - 1][width - 1] = 0;
         while (knownDirectionsMap[row][column] != UNDEFINED) {
             b.append(A[row][column]);
-            byte direction = knownDirectionsMap[row][column];
+            int direction = knownDirectionsMap[row][column];
             if (direction == RIGHT) {
                 column++;
             }
@@ -68,7 +68,7 @@ public class Solution {
 
     private void turtleRace(int[][] A, int row, int column) {
         while (knownDirectionsMap[row][column] != UNDEFINED) {
-            byte direction = knownDirectionsMap[row][column];
+            int direction = knownDirectionsMap[row][column];
             if (direction == RIGHT) {
                 column++;
             }
@@ -81,7 +81,7 @@ public class Solution {
         int rightTurtleColumn = column + 1;
         int downTurtleRow = row + 1;
         int downTurtleColumn = column;
-        while (turtleValid(A, rightTurtleRow, rightTurtleColumn) && turtleValid(A, downTurtleRow, downTurtleColumn)) {
+        while (turtleValid(rightTurtleRow, rightTurtleColumn) && turtleValid(downTurtleRow, downTurtleColumn)) {
             if (rightTurtleColumn == downTurtleColumn && rightTurtleRow == downTurtleRow) {
                 //turtles collided - whe may choose whichever and quit;
                 knownDirectionsMap[row][column] = DOWN;
@@ -98,7 +98,7 @@ public class Solution {
                 return;
             }
 
-            byte rightTurtleDirection = knownDirectionsMap[rightTurtleRow][rightTurtleColumn];
+            int rightTurtleDirection = knownDirectionsMap[rightTurtleRow][rightTurtleColumn];
             if (rightTurtleDirection == UNDEFINED) {
                 //recursion to figure out where to go
                 turtleRace(A, rightTurtleRow, rightTurtleColumn);
@@ -111,7 +111,7 @@ public class Solution {
                 rightTurtleRow++;
             }
 
-            byte downTurtleDirection = knownDirectionsMap[downTurtleRow][downTurtleColumn];
+            int downTurtleDirection = knownDirectionsMap[downTurtleRow][downTurtleColumn];
             if (downTurtleDirection == UNDEFINED) {
                 //recursion to figure out where to go
                 turtleRace(A, downTurtleRow, downTurtleColumn);
@@ -128,10 +128,7 @@ public class Solution {
         knownDirectionsMap[row][column] = DOWN;
     }
 
-    private boolean turtleValid(int[][] A, int t1row, int t1column) {
-        if (t1row > height - 1 || t1column > width - 1) {
-            return false;
-        }
-        return true;
+    private boolean turtleValid(int t1row, int t1column) {
+        return t1row < height && t1column < width;
     }
 }

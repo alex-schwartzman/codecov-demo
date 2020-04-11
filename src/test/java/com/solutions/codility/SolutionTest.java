@@ -1,11 +1,8 @@
 package com.solutions.codility;
 
-import javafx.util.Pair;
 import org.junit.Test;
 
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
@@ -75,6 +72,24 @@ public class SolutionTest {
         final int size = 1000;
         int[][] A = new int[size][size];
         Random generator = new Random(42);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                A[x][y] = generator.nextInt(9) + 1;
+            }
+        }
+        new Solution().solution(A);
+
+
+         generator = new Random(143);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                A[x][y] = generator.nextInt(9) + 1;
+            }
+        }
+        new Solution().solution(A);
+
+
+         generator = new Random(301293);
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
                 A[x][y] = generator.nextInt(9) + 1;
