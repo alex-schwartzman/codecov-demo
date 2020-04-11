@@ -5,46 +5,20 @@ import java.util.*;
 //https://app.codility.com/programmers/task/sprinklers_arrangement/
 //Solution turns out to be N^2
 public class Solution {
-    public static class Coord {
-        public int column, row;
-
-        public Coord(int column, int row) {
-            this.column = column;
-            this.row = row;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Coord)) return false;
-            Coord coord = (Coord) o;
-            return column == coord.column &&
-                    row == coord.row;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(column, row);
-        }
-    }
-
     int stepsCount = 0;
     ArrayList<ArrayList<Integer>> rows = new ArrayList<>();
     ArrayList<ArrayList<Integer>> columns = new ArrayList<>();
     int fieldSize;
-    int[] X;
-    int[] Y;
 
     public int solution(int[] X, int[] Y) {
-        this.X = X;
-        this.Y = Y;
 
         fieldSize = X.length;
-
         initColumnsRows(fieldSize);
 
         for (int i = 0; i < fieldSize; i++) {
-            addSprinkler(new Coord(X[i] - 1, Y[i] - 1));
+            X[i] = X[i] - 1;
+            Y[i] = Y[i] - 1;
+            addSprinkler(X[i], Y[i], i);
         }
 
         //walk through columns and move them left and right to get even distribution
@@ -52,15 +26,19 @@ public class Solution {
             ArrayList<Integer> currentColumn = columns.get(x);
             while (currentColumn.size() != 1) {
                 if (currentColumn.size() > 1) {
-                    Coord sprinklerToBeMoved = new Coord(x, trimTail(currentColumn)); //?
+                    //destination column = x + nextEmptyColumnOffset, source column = x
                     int nextEmptyColumnOffset = findNextEmptyColumnOffset(x);
-                    moveSprinklerRight(sprinklerToBeMoved, nextEmptyColumnOffset);
+                    int destinationColumn = x + nextEmptyColumnOffset;
+                    int sprinklerToBeMoved = trimTail(currentColumn);
+                    X[sprinklerToBeMoved] = destinationColumn;
+                    columns.get(destinationColumn).add(sprinklerToBeMoved);
                     stepsCount += nextEmptyColumnOffset;
                 } else {
+                    //destination column = x, source column = x + nextSprinklerColumnOffset
                     int nextSprinklerColumnOffset = findNextSprinklerColumnOffset(x);
-                    int row = columns.get(x + nextSprinklerColumnOffset).iterator().next();
-                    Coord from = new Coord(x + nextSprinklerColumnOffset, row);
-                    moveSprinklerRight(from, -nextSprinklerColumnOffset);
+                    int sprinklerToBeMoved = trimTail(columns.get(x + nextSprinklerColumnOffset));
+                    X[sprinklerToBeMoved] = x;
+                    columns.get(x).add(sprinklerToBeMoved);
                     stepsCount += nextSprinklerColumnOffset;
                 }
             }
@@ -71,15 +49,19 @@ public class Solution {
             ArrayList<Integer> currentRow = rows.get(y);
             while (currentRow.size() != 1) {
                 if (currentRow.size() > 1) {
-                    Coord sprinklerToBeMoved = new Coord(trimTail(currentRow), y); //?
+                    //destination row = y + nextEmptyRowOffset, source row = y
                     int nextEmptyRowOffset = findNextEmptyRowOffset(y);
-                    moveSprinklerDown(sprinklerToBeMoved, nextEmptyRowOffset);
+                    int destinationRow = y + nextEmptyRowOffset;
+                    int sprinklerToBeMoved = trimTail(currentRow);
+                    Y[sprinklerToBeMoved] = destinationRow;
+                    rows.get(destinationRow).add(sprinklerToBeMoved);
                     stepsCount += nextEmptyRowOffset;
                 } else {
+                    //destination row = y, source row = y + nextSprinklerRowOffset
                     int nextSprinklerRowOffset = findNextSprinklerRowOffset(y);
-                    int column = rows.get(y + nextSprinklerRowOffset).iterator().next();
-                    Coord from = new Coord(column, y + nextSprinklerRowOffset);
-                    moveSprinklerDown(from, -nextSprinklerRowOffset);
+                    int sprinklerToBeMoved = trimTail(rows.get(y + nextSprinklerRowOffset));
+                    Y[sprinklerToBeMoved] = y;
+                    rows.get(y).add(sprinklerToBeMoved);
                     stepsCount += nextSprinklerRowOffset;
                 }
             }
@@ -141,30 +123,8 @@ public class Solution {
         }
     }
 
-    private void addSprinkler(Coord coord) {
-        columns.get(coord.column).add(coord.row);
-        rows.get(coord.row).add(coord.column);
+    private void addSprinkler(int column, int row, int index) {
+        columns.get(column).add(index);
+        rows.get(row).add(index);
     }
-
-    private void removeSprinkler(Coord coord) {
-        columns.get(coord.column).remove(Integer.valueOf(coord.row));
-        rows.get(coord.row).remove(Integer.valueOf(coord.column));
-    }
-
-
-    private void moveSprinkler(Coord from, Coord to) {
-        removeSprinkler(from);
-        addSprinkler(to);
-    }
-
-    private void moveSprinklerDown(Coord from, int count) {
-        Coord to = new Coord(from.column, from.row + count);
-        moveSprinkler(from, to);
-    }
-
-    private void moveSprinklerRight(Coord from, int count) {
-        Coord to = new Coord(from.column + count, from.row);
-        moveSprinkler(from, to);
-    }
-
 }
