@@ -41,7 +41,7 @@ public class SolutionTest {
                 A[x][y] = generator.nextInt(9) + 1;
             }
         }
-        assertEquals("Hello World", new Solution().solution(A));
+        assertEquals("9449582879867596466585977659658386884369858625659957589853967626694598174898993285679998799869566722798757253568439686798579622998589497284782286988685668186568788597846349878648655745489757424364211", new Solution().solution(A));
     }
 
     @Test
@@ -67,8 +67,32 @@ public class SolutionTest {
                 A[x][y] = generator.nextInt(9) + 1;
             }
         }
-        assertEquals("Hello World", new Solution().solution(A));
+        assertEquals("95464735945984865828375288588477972488558848964278568651581", new Solution().solution(A));
     }
 
+    @Test
+    public void testPerformanceOnRandomField1000x1000() {
+        final int size = 1000;
+        int[][] A = new int[size][size];
+        Random generator = new Random(42);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                A[x][y] = generator.nextInt(9) + 1;
+            }
+        }
+        new Solution().solution(A);
+    }
 
+    @Test
+    public void testPerformanceOnRandomField300x300LowVariability() {
+        final int size = 300;
+        int[][] A = new int[size][size];
+        Random generator = new Random(42);
+        for (int x = 0; x < size; x++) {
+            for (int y = 0; y < size; y++) {
+                A[x][y] = generator.nextInt(2) + 1;
+            }
+        }
+        assertEquals("22122122122212222222221122222222222222222221211211111221121", new Solution().solution(A));
+    }
 }
