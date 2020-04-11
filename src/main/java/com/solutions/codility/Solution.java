@@ -29,11 +29,16 @@ public class Solution {
     }
 
     int stepsCount = 0;
-    Map<Integer, Set<Integer>> rows = new HashMap<>();
-    Map<Integer, Set<Integer>> columns = new HashMap<>();
+    ArrayList<ArrayList<Integer>> rows = new ArrayList<>();
+    ArrayList<ArrayList<Integer>> columns = new ArrayList<>();
     int fieldSize;
+    int[] X;
+    int[] Y;
 
     public int solution(int[] X, int[] Y) {
+        this.X = X;
+        this.Y = Y;
+
         fieldSize = X.length;
 
         initColumnsRows(fieldSize);
@@ -44,10 +49,10 @@ public class Solution {
 
         //walk through columns and move them left and right to get even distribution
         for (int x = 0; x < fieldSize; x++) {
-            Set<Integer> currentColumn = columns.get(x);
+            ArrayList<Integer> currentColumn = columns.get(x);
             while (currentColumn.size() != 1) {
                 if (currentColumn.size() > 1) {
-                    Coord sprinklerToBeMoved = new Coord(x, currentColumn.iterator().next()); //?
+                    Coord sprinklerToBeMoved = new Coord(x, trimTail(currentColumn)); //?
                     int nextEmptyColumnOffset = findNextEmptyColumnOffset(x);
                     moveSprinklerRight(sprinklerToBeMoved, nextEmptyColumnOffset);
                     stepsCount += nextEmptyColumnOffset;
@@ -63,10 +68,10 @@ public class Solution {
 
         //walk through rows and move them left and right to get even distribution
         for (int y = 0; y < fieldSize; y++) {
-            Set<Integer> currentRow = rows.get(y);
+            ArrayList<Integer> currentRow = rows.get(y);
             while (currentRow.size() != 1) {
                 if (currentRow.size() > 1) {
-                    Coord sprinklerToBeMoved = new Coord(currentRow.iterator().next(), y); //?
+                    Coord sprinklerToBeMoved = new Coord(trimTail(currentRow), y); //?
                     int nextEmptyRowOffset = findNextEmptyRowOffset(y);
                     moveSprinklerDown(sprinklerToBeMoved, nextEmptyRowOffset);
                     stepsCount += nextEmptyRowOffset;
@@ -81,6 +86,10 @@ public class Solution {
         }
 
         return stepsCount;
+    }
+
+    private int trimTail(ArrayList<Integer> currentRow) {
+        return currentRow.remove(currentRow.size() - 1);
     }
 
     private int findNextSprinklerColumnOffset(int columnToStart) {
@@ -124,9 +133,11 @@ public class Solution {
     }
 
     private void initColumnsRows(int fieldSize) {
+        rows.ensureCapacity(fieldSize);
+        columns.ensureCapacity(fieldSize);
         for (int i = 0; i < fieldSize + 1; i++) {
-            columns.put(i, new HashSet<>());
-            rows.put(i, new HashSet<>());
+            columns.add(i, new ArrayList<>());
+            rows.add(i, new ArrayList<>());
         }
     }
 
@@ -136,8 +147,8 @@ public class Solution {
     }
 
     private void removeSprinkler(Coord coord) {
-        columns.get(coord.column).remove(coord.row);
-        rows.get(coord.row).remove(coord.column);
+        columns.get(coord.column).remove(Integer.valueOf(coord.row));
+        rows.get(coord.row).remove(Integer.valueOf(coord.column));
     }
 
 
