@@ -22,47 +22,53 @@ public class Solution {
         }
 
         //walk through columns and move them left and right to get even distribution
+        int lastSeenEmptyColumn = 0;
+        int lastSeenFilledColumn = 0;
         for (int x = 0; x < fieldSize; x++) {
             ArrayList<Integer> currentColumn = columns[x];
             while (currentColumn.size() != 1) {
                 if (currentColumn.size() > 1) {
                     //destination column = x + nextEmptyColumnOffset, source column = x
-                    int nextEmptyColumnOffset = findNextEmptyColumnOffset(x);
-                    int destinationColumn = x + nextEmptyColumnOffset;
+                    int destinationColumn = findNextEmptyColumn(Math.max(lastSeenEmptyColumn, x));
+                    lastSeenEmptyColumn = destinationColumn;
                     int sprinklerToBeMoved = trimTail(currentColumn);
                     X[sprinklerToBeMoved] = destinationColumn;
                     columns[destinationColumn].add(sprinklerToBeMoved);
-                    stepsCount += nextEmptyColumnOffset;
+                    stepsCount += destinationColumn - x;
                 } else {
                     //destination column = x, source column = x + nextSprinklerColumnOffset
-                    int nextSprinklerColumnOffset = findNextSprinklerColumnOffset(x);
-                    int sprinklerToBeMoved = trimTail(columns[x + nextSprinklerColumnOffset]);
+                    int nextSprinklerColumn = findNextSprinklerColumn(Math.max(x, lastSeenFilledColumn));
+                    lastSeenFilledColumn = nextSprinklerColumn;
+                    int sprinklerToBeMoved = trimTail(columns[nextSprinklerColumn]);
                     X[sprinklerToBeMoved] = x;
                     columns[x].add(sprinklerToBeMoved);
-                    stepsCount += nextSprinklerColumnOffset;
+                    stepsCount += nextSprinklerColumn - x;
                 }
             }
         }
 
         //walk through rows and move them left and right to get even distribution
+        int lastSeenEmptyRow = 0;
+        int lastSeenFilledRow = 0;
         for (int y = 0; y < fieldSize; y++) {
             ArrayList<Integer> currentRow = rows[y];
             while (currentRow.size() != 1) {
                 if (currentRow.size() > 1) {
                     //destination row = y + nextEmptyRowOffset, source row = y
-                    int nextEmptyRowOffset = findNextEmptyRowOffset(y);
-                    int destinationRow = y + nextEmptyRowOffset;
+                    int destinationRow = findNextEmptyRow(Math.max(y, lastSeenEmptyRow));
+                    lastSeenEmptyRow = destinationRow;
                     int sprinklerToBeMoved = trimTail(currentRow);
                     Y[sprinklerToBeMoved] = destinationRow;
                     rows[destinationRow].add(sprinklerToBeMoved);
-                    stepsCount += nextEmptyRowOffset;
+                    stepsCount += destinationRow - y;
                 } else {
                     //destination row = y, source row = y + nextSprinklerRowOffset
-                    int nextSprinklerRowOffset = findNextSprinklerRowOffset(y);
-                    int sprinklerToBeMoved = trimTail(rows[y + nextSprinklerRowOffset]);
+                    int nextSprinklerRow = findNextSprinklerRow(Math.max(y, lastSeenFilledRow));
+                    lastSeenFilledRow = nextSprinklerRow;
+                    int sprinklerToBeMoved = trimTail(rows[nextSprinklerRow]);
                     Y[sprinklerToBeMoved] = y;
                     rows[y].add(sprinklerToBeMoved);
-                    stepsCount += nextSprinklerRowOffset;
+                    stepsCount += nextSprinklerRow - y;
                 }
             }
         }
@@ -74,40 +80,40 @@ public class Solution {
         return currentRow.remove(currentRow.size() - 1);
     }
 
-    private int findNextSprinklerColumnOffset(int columnToStart) {
-        for (int column = columnToStart + 1; column < fieldSize + 1; column++) {
+    private int findNextSprinklerColumn(int columnToStart) {
+        for (int column = columnToStart; column < fieldSize; column++) {
             if (columns[column].size() > 1) {
-                return column - columnToStart;
+                return column;
             }
         }
         System.out.println("impossible condition - sprinklers count less than field size (findNextSprinklerColumnOffset)");
         return 0;
     }
 
-    private int findNextEmptyColumnOffset(int columnToStart) {
-        for (int column = columnToStart + 1; column < fieldSize + 1; column++) {
+    private int findNextEmptyColumn(int columnToStart) {
+        for (int column = columnToStart; column < fieldSize; column++) {
             if (columns[column].isEmpty()) {
-                return column - columnToStart;
+                return column;
             }
         }
         System.out.println("impossible condition - sprinklers count less than field size (findNextEmptyColumnOffset)");
         return fieldSize;
     }
 
-    private int findNextSprinklerRowOffset(int rowToStart) {
-        for (int row = rowToStart + 1; row < fieldSize + 1; row++) {
+    private int findNextSprinklerRow(int rowToStart) {
+        for (int row = rowToStart; row < fieldSize; row++) {
             if (rows[row].size() > 1) {
-                return row - rowToStart;
+                return row;
             }
         }
         System.out.println("impossible condition - sprinklers count less than field size (findNextSprinklerRowOffset)");
         return 0;
     }
 
-    private int findNextEmptyRowOffset(int rowToStart) {
-        for (int row = rowToStart + 1; row < fieldSize + 1; row++) {
+    private int findNextEmptyRow(int rowToStart) {
+        for (int row = rowToStart; row < fieldSize; row++) {
             if (rows[row].isEmpty()) {
-                return row - rowToStart;
+                return row;
             }
         }
         System.out.println("impossible condition - sprinklers count less than field size (findNextEmptyRowOffset)");
