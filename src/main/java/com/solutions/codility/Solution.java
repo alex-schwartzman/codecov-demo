@@ -30,12 +30,26 @@ public class Solution {
             }
         }
 
-        while (knownDirectionsMap[height - 1][width - 1] == UNDEFINED) {
-            turtleRace(A, 0, 0);
-        }
-        StringBuilder b = new StringBuilder();
         int row = 0;
         int column = 0;
+        while (knownDirectionsMap[height - 1][width - 1] == UNDEFINED) {
+            while (knownDirectionsMap[row][column] != UNDEFINED) {
+                byte direction = knownDirectionsMap[row][column];
+                if (direction == RIGHT) {
+                    column++;
+                }
+                if (direction == DOWN) {
+                    row++;
+                }
+            }
+            if (row >= height) {
+                break;
+            }
+            turtleRace(A, row, column);
+        }
+        StringBuilder b = new StringBuilder();
+        row = 0;
+        column = 0;
         //small race
         knownDirectionsMap[height - 1][width - 1] = 0;
         while (knownDirectionsMap[row][column] != UNDEFINED) {
