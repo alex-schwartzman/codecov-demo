@@ -3,8 +3,9 @@ package com.solutions.codility;
 import java.util.*;
 
 //https://app.codility.com/programmers/task/sprinklers_arrangement/
-//Solution turns out to be N^2
 public class Solution {
+
+    static int MODULO_BASE = 1000000007;
     int stepsCount = 0;
     ArrayList<Integer>[] rows;
     ArrayList<Integer>[] columns;
@@ -45,6 +46,9 @@ public class Solution {
                     stepsCount += nextSprinklerColumn - x;
                 }
             }
+            if(stepsCount> MODULO_BASE){
+                stepsCount=Math.floorMod(stepsCount, MODULO_BASE);
+            }
         }
 
         //walk through rows and move them left and right to get even distribution
@@ -71,9 +75,12 @@ public class Solution {
                     stepsCount += nextSprinklerRow - y;
                 }
             }
+            if (stepsCount > MODULO_BASE) {
+                stepsCount = Math.floorMod(stepsCount, MODULO_BASE);
+            }
         }
 
-        return stepsCount;
+        return Math.floorMod(stepsCount, MODULO_BASE);
     }
 
     private int trimTail(ArrayList<Integer> currentRow) {

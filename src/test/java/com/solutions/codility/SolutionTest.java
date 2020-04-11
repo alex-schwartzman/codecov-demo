@@ -203,6 +203,23 @@ public class SolutionTest {
     }
 
     @Test
+    public void testPerformanceAllInOppositeSpot350() {
+        final int spotSize = 350;
+        final int size = spotSize * spotSize;
+        int[] X = new int[size];
+        int[] Y = new int[size];
+        int sprinklersCount = 0;
+        for (int x = size - spotSize; x < size; x++) {
+            for (int y = size - spotSize; y < size; y++) {
+                X[sprinklersCount] = x + 1;
+                Y[sprinklersCount] = y + 1;
+                sprinklersCount++;
+            }
+        }
+        assertEquals(963374902, new Solution().solution(X, Y));
+    }
+
+    @Test
     public void testPerformanceAllInCenterSpot100() {
         final int spotSize = 100;
         final int size = spotSize * spotSize;
