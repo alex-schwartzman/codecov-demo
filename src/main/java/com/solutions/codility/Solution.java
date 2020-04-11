@@ -1,41 +1,18 @@
 package com.solutions.codility;
 
-import java.util.ArrayList;
-
 public class Solution {
 
-    static class Result {
-        public ArrayList<Integer> path = new ArrayList<>();
-
-        public Result append(int i) {
-            path.add(i);
-            return this;
-        }
-
-        public boolean isBiggerOrEqualThan(Result otherPath) {
-            if (this.path.size() < otherPath.path.size()) {
-                System.out.println("Impossible condition - comparison of paths of different lengths");
-                return false;
-            }
-            for (int i = path.size() - 1; i >= 0; i--) {
-                if (this.path.get(i) < otherPath.path.get(i)) {
-                    return false;
-                }
-                if (this.path.get(i) > otherPath.path.get(i)) {
-                    return true;
-                }
-            }
-            return true;
-        }
-    }
+    private int width;
+    private int height;
 
     byte[][] knownDirectionsMap;
     static final byte DOWN = 1;
     static final byte RIGHT = 2;
+    static final byte UNDEFINED = 0;
 
     public String solution(int[][] A) {
-        final int width = A[0].length;
-        final int height = A.length;
+        width = A[0].length;
+        height = A.length;
         knownDirectionsMap = new byte[height][width];
         for (int i = 0; i < width - 1; i++) {
             knownDirectionsMap[height - 1][i] = RIGHT;
@@ -52,39 +29,95 @@ public class Solution {
                 }
             }
         }
-        return toString(solution(A, 0, 0).path);
-    }
 
-    private String toString(ArrayList<Integer> array) {
+        while (knownDirectionsMap[height - 1][width - 1] == UNDEFINED) {
+            turtleRace(A, 0, 0);
+        }
         StringBuilder b = new StringBuilder();
-        for (int i : array) {
-            b.append(i);
+        int row = 0;
+        int column = 0;
+        //small race
+        knownDirectionsMap[height - 1][width - 1] = 0;
+        while (knownDirectionsMap[row][column] != UNDEFINED) {
+            b.append(A[row][column]);
+            byte direction = knownDirectionsMap[row][column];
+            if (direction == RIGHT) {
+                column++;
+            }
+            if (direction == DOWN) {
+                row++;
+            }
         }
-        return b.reverse().toString();
+        b.append(A[row][column]);
+        return b.toString();
     }
 
-    private Result solution(int[][] A, int row, int column) {
-        if (row == A.length - 1 && column == A[row].length - 1) {
-            return new Result().append(A[row][column]);
+    private void turtleRace(int[][] A, int row, int column) {
+        while (knownDirectionsMap[row][column] != UNDEFINED) {
+            byte direction = knownDirectionsMap[row][column];
+            if (direction == RIGHT) {
+                column++;
+            }
+            if (direction == DOWN) {
+                row++;
+            }
         }
 
-        byte knownDirection = knownDirectionsMap[row][column];
-        if (knownDirection == RIGHT) {
-            return solution(A, row, column + 1).append(A[row][column]);
+        int rightTurtleRow = row;
+        int rightTurtleColumn = column + 1;
+        int downTurtleRow = row + 1;
+        int downTurtleColumn = column;
+        while (turtleValid(A, rightTurtleRow, rightTurtleColumn) && turtleValid(A, downTurtleRow, downTurtleColumn)) {
+            if (rightTurtleColumn == downTurtleColumn && rightTurtleRow == downTurtleRow) {
+                //turtles collided - whe may choose whichever and quit;
+                knownDirectionsMap[row][column] = DOWN;
+                return;
+            }
+            int rightTurtleValue = A[rightTurtleRow][rightTurtleColumn];
+            int downTurtleValue = A[downTurtleRow][downTurtleColumn];
+            if (rightTurtleValue > downTurtleValue) {
+                knownDirectionsMap[row][column] = RIGHT;
+                return;
+            }
+            if (rightTurtleValue < downTurtleValue) {
+                knownDirectionsMap[row][column] = DOWN;
+                return;
+            }
+
+            byte rightTurtleDirection = knownDirectionsMap[rightTurtleRow][rightTurtleColumn];
+            if (rightTurtleDirection == UNDEFINED) {
+                //recursion to figure out where to go
+                turtleRace(A, rightTurtleRow, rightTurtleColumn);
+                rightTurtleDirection = knownDirectionsMap[rightTurtleRow][rightTurtleColumn];
+            }
+            //and after recursion - it should be clear;
+            if (rightTurtleDirection == RIGHT) {
+                rightTurtleColumn++;
+            } else if (rightTurtleDirection == DOWN) {
+                rightTurtleRow++;
+            }
+
+            byte downTurtleDirection = knownDirectionsMap[downTurtleRow][downTurtleColumn];
+            if (downTurtleDirection == UNDEFINED) {
+                //recursion to figure out where to go
+                turtleRace(A, downTurtleRow, downTurtleColumn);
+                downTurtleDirection = knownDirectionsMap[downTurtleRow][downTurtleColumn];
+            }
+            //and after recursion - it should be clear;
+            if (downTurtleDirection == RIGHT) {
+                downTurtleColumn++;
+            } else if (downTurtleDirection == DOWN) {
+                downTurtleRow++;
+            }
         }
-        if (knownDirection == DOWN) {
-            return solution(A, row + 1, column).append(A[row][column]);
+        //both became invalid (reached bottom right corner), so it does not matter anymore
+        knownDirectionsMap[row][column] = DOWN;
+    }
+
+    private boolean turtleValid(int[][] A, int t1row, int t1column) {
+        if (t1row > height - 1 || t1column > width - 1) {
+            return false;
         }
-
-        Result optimalResult;
-
-        //complicated! - need to calculate both
-        Result rightOption = solution(A, row, column + 1);
-        Result downOption = solution(A, row + 1, column);
-        boolean rightIsBigger = rightOption.isBiggerOrEqualThan(downOption);
-        optimalResult = rightIsBigger ? rightOption : downOption;
-        knownDirectionsMap[row][column] = rightIsBigger ? RIGHT : DOWN; //don't forget to write it down, in order to not need recalculate again
-
-        return optimalResult.append(A[row][column]);
+        return true;
     }
 }
