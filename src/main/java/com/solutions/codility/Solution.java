@@ -2,11 +2,10 @@ package com.solutions.codility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class Solution {
 
-    public class Turtle {
+    public static class Turtle {
         public int row, column;
         private boolean isValid = true;
 
@@ -56,10 +55,10 @@ public class Solution {
         }
     }
 
-    private int width;
-    private int height;
+    private static int width;
+    private static int height;
 
-    byte[][] returnPathwayMap;
+    static byte[][] returnPathwayMap;
     static final byte UP = 3;
     static final byte LEFT = 4;
     static final byte UNDEFINED = 0;
@@ -70,10 +69,10 @@ public class Solution {
         returnPathwayMap = new byte[height][width];
 
         List<Turtle> allActiveTurtles = new ArrayList<>();
+        ArrayList<Turtle> nextGenerationTurtlesList = new ArrayList<>();
         allActiveTurtles.add(new Turtle(0, 0));
         while (!allActiveTurtles.isEmpty()) {
-            ArrayList<Turtle> nextGenerationTurtlesList = new ArrayList<>();
-            nextGenerationTurtlesList.ensureCapacity(allActiveTurtles.size() * 2);
+            nextGenerationTurtlesList.clear();
             int maxValue = 0;
             for (Turtle t :
                     allActiveTurtles) {
@@ -87,8 +86,12 @@ public class Solution {
                     nextGenerationTurtlesList.add(childNextGen);
                 }
             }
-            final int finalMaxValue = maxValue;
-            allActiveTurtles = nextGenerationTurtlesList.stream().filter(t -> t.getValue(A) == finalMaxValue).collect(Collectors.toList());
+            allActiveTurtles.clear();
+            for(Turtle t: nextGenerationTurtlesList){
+                if(t.getValue(A)==maxValue){
+                    allActiveTurtles.add(t);
+                }
+            }
         }
 
         StringBuilder b = new StringBuilder();
