@@ -1,134 +1,98 @@
 package com.solutions.codility;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class Solution {
+
+    public class Turtle {
+        public int row, column;
+
+        public Turtle(int row, int column) {
+            this.row = row;
+            this.column = column;
+        }
+
+        public ArrayList<Turtle> step() {
+            ArrayList<Turtle> result = new ArrayList<>(2);
+            if (row < height - 1) {
+                //Go down, and mark that setReturnPathWaySign would be UP
+                Turtle t = new Turtle(row + 1, column);
+                if (t.getReturnPathWaySign() == UNDEFINED) { //need to check for UNDEFINED, just for the case if some converging pathways yield the same number - we don't need to keep them both in this case
+                    t.setReturnPathWaySign(UP);
+                    result.add(t);
+                }
+            }
+            if (column < width - 1) {
+                //Go right, and mark that setReturnPathWaySign would be LEFT
+                Turtle t = new Turtle(row, column + 1);
+                if (t.getReturnPathWaySign() == UNDEFINED) {
+                    t.setReturnPathWaySign(LEFT);
+                    result.add(t);
+                }
+            }
+            return result;
+        }
+
+        private int getValue(int[][] a) {
+            return a[row][column];
+        }
+
+        private void setReturnPathWaySign(byte direction) {
+            returnPathwayMap[row][column] = direction;
+        }
+
+        private byte getReturnPathWaySign() {
+            return returnPathwayMap[row][column];
+        }
+    }
 
     private int width;
     private int height;
 
-    int[][] knownDirectionsMap;
-    static final byte DOWN = 1;
-    static final byte RIGHT = 2;
+    byte[][] returnPathwayMap;
+    static final byte UP = 3;
+    static final byte LEFT = 4;
     static final byte UNDEFINED = 0;
 
     public String solution(int[][] A) {
         width = A[0].length;
         height = A.length;
-        knownDirectionsMap = new int[height][width];
-        for (int i = 0; i < width - 1; i++) {
-            knownDirectionsMap[height - 1][i] = RIGHT;
-        }
-        for (int i = 0; i < A.length - 1; i++) {
-            knownDirectionsMap[i][width - 1] = DOWN;
-        }
-        for (int row = 0; row < height - 1; row++) {
-            for (int column = 0; column < width - 1; column++) {
-                int numberOnTheRight = A[row][column + 1];
-                int numberDownWards = A[row + 1][column];
-                if (numberDownWards != numberOnTheRight) {
-                    knownDirectionsMap[row][column] = numberOnTheRight > numberDownWards ? RIGHT : DOWN;
+        returnPathwayMap = new byte[height][width];
+
+        List<Turtle> allActiveTurtles = new ArrayList<Turtle>();
+        allActiveTurtles.add(new Turtle(0, 0));
+        while (!allActiveTurtles.isEmpty()) {
+            ArrayList<Turtle> nextGenerationTurtlesList = new ArrayList<>();
+            nextGenerationTurtlesList.ensureCapacity(allActiveTurtles.size() * 2);
+            int maxValue = 0;
+            for (Turtle t :
+                    allActiveTurtles) {
+                for (Turtle childNextGen : t.step()) {
+                    maxValue = Math.max(childNextGen.getValue(A), maxValue);
+                    nextGenerationTurtlesList.add(childNextGen);
                 }
             }
+            final int finalMaxValue = maxValue;
+            allActiveTurtles = nextGenerationTurtlesList.stream().filter(t->t.getValue(A)== finalMaxValue).collect(Collectors.toList());
         }
 
-        int row = 0;
-        int column = 0;
-        while (knownDirectionsMap[height - 1][width - 1] == UNDEFINED) {
-            while (knownDirectionsMap[row][column] != UNDEFINED) {
-                int direction = knownDirectionsMap[row][column];
-                if (direction == RIGHT) {
-                    column++;
-                }
-                if (direction == DOWN) {
-                    row++;
-                }
-            }
-            if (row >= height) {
-                break;
-            }
-            turtleRace(A, row, column);
-        }
         StringBuilder b = new StringBuilder();
-        row = 0;
-        column = 0;
-        //small race
-        knownDirectionsMap[height - 1][width - 1] = 0;
-        while (knownDirectionsMap[row][column] != UNDEFINED) {
+        int row = height - 1;
+        int column = width - 1;
+        //traverse backwards, following arrows
+        byte direction;
+        while ((direction = returnPathwayMap[row][column]) != UNDEFINED) {
             b.append(A[row][column]);
-            int direction = knownDirectionsMap[row][column];
-            if (direction == RIGHT) {
-                column++;
+            if (direction == LEFT) {
+                column--;
             }
-            if (direction == DOWN) {
-                row++;
+            if (direction == UP) {
+                row--;
             }
         }
         b.append(A[row][column]);
-        return b.toString();
-    }
-
-    private void turtleRace(int[][] A, int row, int column) {
-        while (knownDirectionsMap[row][column] != UNDEFINED) {
-            int direction = knownDirectionsMap[row][column];
-            if (direction == RIGHT) {
-                column++;
-            }
-            if (direction == DOWN) {
-                row++;
-            }
-        }
-
-        int rightTurtleRow = row;
-        int rightTurtleColumn = column + 1;
-        int downTurtleRow = row + 1;
-        int downTurtleColumn = column;
-        while (turtleValid(rightTurtleRow, rightTurtleColumn) && turtleValid(downTurtleRow, downTurtleColumn)) {
-            if (rightTurtleColumn == downTurtleColumn && rightTurtleRow == downTurtleRow) {
-                //turtles collided - whe may choose whichever and quit;
-                knownDirectionsMap[row][column] = DOWN;
-                return;
-            }
-            int rightTurtleValue = A[rightTurtleRow][rightTurtleColumn];
-            int downTurtleValue = A[downTurtleRow][downTurtleColumn];
-            if (rightTurtleValue > downTurtleValue) {
-                knownDirectionsMap[row][column] = RIGHT;
-                return;
-            }
-            if (rightTurtleValue < downTurtleValue) {
-                knownDirectionsMap[row][column] = DOWN;
-                return;
-            }
-
-            int rightTurtleDirection = knownDirectionsMap[rightTurtleRow][rightTurtleColumn];
-            if (rightTurtleDirection == UNDEFINED) {
-                //recursion to figure out where to go
-                turtleRace(A, rightTurtleRow, rightTurtleColumn);
-                rightTurtleDirection = knownDirectionsMap[rightTurtleRow][rightTurtleColumn];
-            }
-            //and after recursion - it should be clear;
-            if (rightTurtleDirection == RIGHT) {
-                rightTurtleColumn++;
-            } else if (rightTurtleDirection == DOWN) {
-                rightTurtleRow++;
-            }
-
-            int downTurtleDirection = knownDirectionsMap[downTurtleRow][downTurtleColumn];
-            if (downTurtleDirection == UNDEFINED) {
-                //recursion to figure out where to go
-                turtleRace(A, downTurtleRow, downTurtleColumn);
-                downTurtleDirection = knownDirectionsMap[downTurtleRow][downTurtleColumn];
-            }
-            //and after recursion - it should be clear;
-            if (downTurtleDirection == RIGHT) {
-                downTurtleColumn++;
-            } else if (downTurtleDirection == DOWN) {
-                downTurtleRow++;
-            }
-        }
-        //both became invalid (reached bottom right corner), so it does not matter anymore
-        knownDirectionsMap[row][column] = DOWN;
-    }
-
-    private boolean turtleValid(int t1row, int t1column) {
-        return t1row < height && t1column < width;
+        return b.reverse().toString();
     }
 }
