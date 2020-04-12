@@ -25,7 +25,7 @@ public class Solution {
 
             if (row < height - 1) {
                 row++;
-                if (getReturnPathWaySign() == UNDEFINED) { //need to check for UNDEFINED, just for the case if some converging pathways yield the same number - we don't need to keep them both in this case
+                if (getReturnPathWaySign(row, column) == UNDEFINED) { //need to check for UNDEFINED, just for the case if some converging pathways yield the same number - we don't need to keep them both in this case
                     setReturnPathWaySign(UP);
                 } else {
                     invalidate();
@@ -45,20 +45,8 @@ public class Solution {
             return row > 0;
         }
 
-        private int getValue(int[][] a) {
-            return a[row][column];
-        }
-
         private void setReturnPathWaySign(byte direction) {
             returnPathwayMap[row][column] = direction;
-        }
-
-        private byte getReturnPathWaySign() {
-            return returnPathwayMap[row][column];
-        }
-
-        private byte getReturnPathWaySign(int r, int c) {
-            return returnPathwayMap[r][c];
         }
     }
 
@@ -80,21 +68,21 @@ public class Solution {
         allActiveTurtles.add(new Turtle(0, 0));
         int allActiveMaxValue = A[0][0];
         while (!allActiveTurtles.isEmpty()) {
-            int maxValue = 0;
-            for (Turtle t :
+            int nextGenerationTurtlesMaxValue = 0;
+            for (Turtle currentActiveTurtle :
                     allActiveTurtles) {
-                if (t.getValue(A) < allActiveMaxValue) {
+                if (getValue(A, currentActiveTurtle) < allActiveMaxValue) {
                     //filter all active nodes on-the-fly, without saving them into collection
                     continue;
                 }
-                Turtle childNextGen = t.step();
-                if (t.isValid()) {
-                    maxValue = Math.max(t.getValue(A), maxValue);
-                    nextGenerationTurtlesList.add(t);
+                Turtle newTurtleGeneratedOnFork = currentActiveTurtle.step();
+                if (currentActiveTurtle.isValid()) {
+                    nextGenerationTurtlesMaxValue = Math.max(getValue(A, currentActiveTurtle), nextGenerationTurtlesMaxValue);
+                    nextGenerationTurtlesList.add(currentActiveTurtle);
                 }
-                if (childNextGen != null) {
-                    maxValue = Math.max(childNextGen.getValue(A), maxValue);
-                    nextGenerationTurtlesList.add(childNextGen);
+                if (newTurtleGeneratedOnFork != null) {
+                    nextGenerationTurtlesMaxValue = Math.max(getValue(A, newTurtleGeneratedOnFork), nextGenerationTurtlesMaxValue);
+                    nextGenerationTurtlesList.add(newTurtleGeneratedOnFork);
                 }
             }
             //swap two collections instead of deleting and re-creating, to avoid GC intervention
@@ -104,7 +92,7 @@ public class Solution {
 
             //after swap, don't forget to clean the foundation for next generation
             nextGenerationTurtlesList.clear();
-            allActiveMaxValue = maxValue;
+            allActiveMaxValue = nextGenerationTurtlesMaxValue;
         }
 
         StringBuilder b = new StringBuilder();
@@ -124,4 +112,13 @@ public class Solution {
         b.append(A[row][column]);
         return b.reverse().toString();
     }
+
+    int getValue(int[][] A, Turtle t) {
+        return A[t.row][t.column];
+    }
+
+    static byte getReturnPathWaySign(int r, int c) {
+        return returnPathwayMap[r][c];
+    }
+
 }
