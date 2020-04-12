@@ -7,83 +7,29 @@ import static org.junit.Assert.assertEquals;
 public class SolutionTest {
 
     @Test
+    public void testSingleVillage() {
+        assertEquals(1, new Solution().solution(new int[]{0}));
+    }
+
+
+    @Test
     public void testAsDescribedInTask1() {
-        assertEquals(5, new Solution().solution(new int[]{1, 3, 6, 4, 1, 2}));
+        assertEquals(12, new Solution().solution(new int[]{2, 0, 2, 2, 1, 0}));
     }
 
     @Test
-    public void testAsDescribedInTask2() {
-        assertEquals(4, new Solution().solution(new int[]{1, 2, 3}));
+    public void testTwoVillages() {
+        assertEquals(3, new Solution().solution(new int[]{1, 1}));
     }
 
     @Test
-    public void testAsDescribedInTask3() {
-        assertEquals(1, new Solution().solution(new int[]{-1, -3}));
+    public void testThreeVillagesInARow() {
+        assertEquals(6, new Solution().solution(new int[]{1, 2, 2}));
     }
 
     @Test
-    public void testOnBiggerContinuousArray() {
-        final int size = 100000;
-        int[] A = new int[size];
-        for (int i = 0; i < A.length; i++) {
-            A[i] = A.length - i;
-        }
-        assertEquals(size + 1, new Solution().solution(A));
+    public void testThreeVillages021() {
+        assertEquals(5, new Solution().solution(new int[]{2, 2, 2}));
     }
 
-    @Test
-    public void testOnBiggerLastItem() {
-        final int size = 100000;
-        int[] A = new int[size];
-        for (int i = 0; i < A.length; i++) {
-            A[i] = A.length - i;
-        }
-
-        int gapIndex = 2;
-        int expectedResult = A[gapIndex];
-        A[gapIndex] = -1;
-        assertEquals(expectedResult, new Solution().solution(A));
-    }
-
-    @Test
-    public void testOnBiggerArrayAlmostLast() {
-        final int size = 100000;
-        int[] A = new int[size];
-        for (int i = 0; i < A.length; i++) {
-            A[i] = A.length - i;
-        }
-        int gapIndex = size / 4;
-        int expectedResult = A[gapIndex];
-        A[gapIndex] = -1;
-        assertEquals(expectedResult, new Solution().solution(A));
-    }
-
-    @Test
-    public void testOnBiggerArrayHalfWay() {
-        final int size = 100000;
-        int[] A = new int[size];
-        for (int i = 0; i < A.length; i++) {
-            A[i] = A.length - i;
-        }
-
-        int gapIndex = size / 2;
-        int expectedResult = A[gapIndex];
-        A[gapIndex] = -1;
-        assertEquals(expectedResult, new Solution().solution(A));
-
-    }
-
-    @Test
-    public void testOnBiggerArrayInBeginning() {
-        final int size = 100000;
-        int[] A = new int[size];
-        for (int i = 0; i < A.length; i++) {
-            A[i] = A.length - i;
-        }
-
-        int gapIndex = 3 * size / 4;
-        int expectedResult = A[gapIndex];
-        A[gapIndex] = -1;
-        assertEquals(expectedResult, new Solution().solution(A));
-    }
 }
