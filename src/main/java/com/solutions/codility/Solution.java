@@ -8,30 +8,34 @@ public class Solution {
 
     public class Turtle {
         public int row, column;
+        private boolean isValid = true;
 
         public Turtle(int row, int column) {
             this.row = row;
             this.column = column;
         }
 
-        public ArrayList<Turtle> step() {
-            ArrayList<Turtle> result = new ArrayList<>(2);
-            if (row < height - 1) {
-                //Go down, and mark that setReturnPathWaySign would be UP
-                Turtle t = new Turtle(row + 1, column);
-                if (t.getReturnPathWaySign() == UNDEFINED) { //need to check for UNDEFINED, just for the case if some converging pathways yield the same number - we don't need to keep them both in this case
-                    t.setReturnPathWaySign(UP);
-                    result.add(t);
-                }
-            }
+        public Turtle step() {
+            Turtle result = null;
             if (column < width - 1) {
                 //Go right, and mark that setReturnPathWaySign would be LEFT
-                Turtle t = new Turtle(row, column + 1);
-                if (t.getReturnPathWaySign() == UNDEFINED) {
-                    t.setReturnPathWaySign(LEFT);
-                    result.add(t);
+                if (getReturnPathWaySign(row, column + 1) == UNDEFINED) {
+                    result = new Turtle(row, column + 1);
+                    result.setReturnPathWaySign(LEFT);
                 }
             }
+
+            if (row < height - 1) {
+                row++;
+                if (getReturnPathWaySign() == UNDEFINED) { //need to check for UNDEFINED, just for the case if some converging pathways yield the same number - we don't need to keep them both in this case
+                    setReturnPathWaySign(UP);
+                } else {
+                    isValid = false;
+                }
+            } else {
+                isValid = false;
+            }
+
             return result;
         }
 
@@ -45,6 +49,10 @@ public class Solution {
 
         private byte getReturnPathWaySign() {
             return returnPathwayMap[row][column];
+        }
+
+        private byte getReturnPathWaySign(int r, int c) {
+            return returnPathwayMap[r][c];
         }
     }
 
@@ -61,7 +69,7 @@ public class Solution {
         height = A.length;
         returnPathwayMap = new byte[height][width];
 
-        List<Turtle> allActiveTurtles = new ArrayList<Turtle>();
+        List<Turtle> allActiveTurtles = new ArrayList<>();
         allActiveTurtles.add(new Turtle(0, 0));
         while (!allActiveTurtles.isEmpty()) {
             ArrayList<Turtle> nextGenerationTurtlesList = new ArrayList<>();
@@ -69,13 +77,18 @@ public class Solution {
             int maxValue = 0;
             for (Turtle t :
                     allActiveTurtles) {
-                for (Turtle childNextGen : t.step()) {
+                Turtle childNextGen = t.step();
+                if (t.isValid) {
+                    maxValue = Math.max(t.getValue(A), maxValue);
+                    nextGenerationTurtlesList.add(t);
+                }
+                if (childNextGen != null) {
                     maxValue = Math.max(childNextGen.getValue(A), maxValue);
                     nextGenerationTurtlesList.add(childNextGen);
                 }
             }
             final int finalMaxValue = maxValue;
-            allActiveTurtles = nextGenerationTurtlesList.stream().filter(t->t.getValue(A)== finalMaxValue).collect(Collectors.toList());
+            allActiveTurtles = nextGenerationTurtlesList.stream().filter(t -> t.getValue(A) == finalMaxValue).collect(Collectors.toList());
         }
 
         StringBuilder b = new StringBuilder();
