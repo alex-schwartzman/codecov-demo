@@ -35,7 +35,28 @@ public class Solution {
     }
 
     private boolean isConnectedGraph(int startDate, int endDate) {
+        if (countOrphans(startDate, endDate) > 0) {
+            return false;
+        }
         return traverse(startDate, startDate, endDate, -1) == endDate - startDate + 1;
+    }
+
+    private int countOrphans(int startDate, int endDate) {
+        //this is insufficient. We actually need to count isolated islands of size 1..N, not only islands of size N
+        int accumulator = 0;
+        for (int i = startDate; i <= endDate; i++) {
+            boolean isOrphan = true;
+            for (int nextHop : edges[i]) {
+                if (startDate <= nextHop && nextHop <= endDate) {
+                    isOrphan = false;
+                    break;
+                }
+            }
+            if (isOrphan) {
+                accumulator++;
+            }
+        }
+        return accumulator;
     }
 
     private int traverse(int startFrom, int lowerBoundary, int upperBoundary, int exceptEdge) {
