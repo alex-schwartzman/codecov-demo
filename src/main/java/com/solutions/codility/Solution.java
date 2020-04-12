@@ -7,7 +7,6 @@ public class Solution {
 
     public static class Turtle {
         public int row, column;
-        private boolean isValid = true;
 
         public Turtle(int row, int column) {
             this.row = row;
@@ -29,13 +28,21 @@ public class Solution {
                 if (getReturnPathWaySign() == UNDEFINED) { //need to check for UNDEFINED, just for the case if some converging pathways yield the same number - we don't need to keep them both in this case
                     setReturnPathWaySign(UP);
                 } else {
-                    isValid = false;
+                    invalidate();
                 }
             } else {
-                isValid = false;
+                invalidate();
             }
 
             return result;
+        }
+
+        private void invalidate() {
+            row = -1;
+        }
+
+        public boolean isValid() {
+            return row > 0;
         }
 
         private int getValue(int[][] a) {
@@ -69,15 +76,19 @@ public class Solution {
         returnPathwayMap = new byte[height][width];
 
         List<Turtle> allActiveTurtles = new ArrayList<>();
-        ArrayList<Turtle> nextGenerationTurtlesList = new ArrayList<>();
+        List<Turtle> nextGenerationTurtlesList = new ArrayList<>();
         allActiveTurtles.add(new Turtle(0, 0));
+        int allActiveMaxValue = A[0][0];
         while (!allActiveTurtles.isEmpty()) {
-            nextGenerationTurtlesList.clear();
             int maxValue = 0;
             for (Turtle t :
                     allActiveTurtles) {
+                if (t.getValue(A) < allActiveMaxValue) {
+                    //filter all active nodes on-the-fly, without saving them into collection
+                    continue;
+                }
                 Turtle childNextGen = t.step();
-                if (t.isValid) {
+                if (t.isValid()) {
                     maxValue = Math.max(t.getValue(A), maxValue);
                     nextGenerationTurtlesList.add(t);
                 }
@@ -86,12 +97,14 @@ public class Solution {
                     nextGenerationTurtlesList.add(childNextGen);
                 }
             }
-            allActiveTurtles.clear();
-            for(Turtle t: nextGenerationTurtlesList){
-                if(t.getValue(A)==maxValue){
-                    allActiveTurtles.add(t);
-                }
-            }
+            //swap two collections instead of deleting and re-creating, to avoid GC intervention
+            List<Turtle> tmpList = allActiveTurtles;
+            allActiveTurtles = nextGenerationTurtlesList;
+            nextGenerationTurtlesList = tmpList;
+
+            //after swap, don't forget to clean the foundation for next generation
+            nextGenerationTurtlesList.clear();
+            allActiveMaxValue = maxValue;
         }
 
         StringBuilder b = new StringBuilder();
