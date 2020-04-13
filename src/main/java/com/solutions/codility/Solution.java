@@ -1,7 +1,6 @@
 package com.solutions.codility;
 
 import java.util.ArrayList;
-import java.util.TreeSet;
 
 public class Solution {
 
@@ -21,7 +20,10 @@ public class Solution {
         }
         if (answers[from][to] != answer) {
             answers[from][to] = answer;
-            result++;
+            if (answer == INTERCONNECTED) {
+//                System.out.printf(" %d:%d %d\n", from, to, answer);
+                result++;
+            }
         }
     }
 
@@ -54,43 +56,19 @@ public class Solution {
             }
         }
 
-        for (int i = 0; i < A.length; i++) {
-            setAnswer(i, i, INTERCONNECTED);
-            searchForConnectedNeighbors(i, i, new TreeSet<Integer>(edges[i]));
+        setAnswer(A.length - 1, A.length - 1, INTERCONNECTED);
+        for (int from = 0; from < A.length - 1; from++) {
+            setAnswer(from, from, INTERCONNECTED);
+            for (int to = from + 1; to < A.length; to++) {
+                if (isConnectedGraph(from, to)) {
+                    setAnswer(from, to, INTERCONNECTED);
+                }
+            }
         }
-
         return result;
     }
 
-    private void searchForConnectedNeighbors(int from, int to, TreeSet<Integer> allNeighbors) {
-        while (from > 0) {
-            while (allNeighbors.contains(from - 1)) {
-                from--;
-                if (allNeighbors.contains(from)) {
-                    setAnswer(from, to, INTERCONNECTED);
-                    allNeighbors.addAll(edges[from]);
-                } else {
-                    setAnswer(from, to, NO);
-                }
-            }
-
-            Integer nextSuitableNeighbor = allNeighbors.floor(from - 1);
-            if (nextSuitableNeighbor != null) {
-                if (isConnectedGraph(nextSuitableNeighbor, to)) {
-                    setAnswer(nextSuitableNeighbor, to, INTERCONNECTED);
-                    for (int vertex = nextSuitableNeighbor; vertex < lastConnectedPoint; vertex++) {
-                        //add all neighbors for the gap
-                        allNeighbors.addAll(edges[vertex]);
-                    }
-                } else {
-                    setAnswer(nextSuitableNeighbor, to, NO);
-                }
-
-                from = nextSuitableNeighbor;
-            }
-        }
-    }
-
+    //looks awesome, but is inherently incorrect
     private boolean isConnectedGraph(int from, int to) {
         byte[] results = new byte[to - from + 1];
         for (int vertex = from; vertex <= to; vertex++) {
