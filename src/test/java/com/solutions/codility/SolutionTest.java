@@ -59,6 +59,11 @@ public class SolutionTest {
     }
 
     @Test
+    public void testThreeVillages0213() {
+        assertEquals(8, new Solution().solution(new int[]{2, 2, 2, 1}));
+    }
+
+    @Test
     public void test1000VillagesInARow() {
         assertEquals(500500, new Solution().solution(village1000LinedUp));
     }
