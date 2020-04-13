@@ -39,23 +39,37 @@ public class Solution {
             }
         }
 
-
+        int rowEnd = A.length;
         for (int from = 0; from < A.length; from++) {
             int[] edgeCounters = new int[A.length];
-            for (int to = from; to < A.length; to++) {
+            for (int to = from; to < rowEnd; to++) {
                 for (int j = 0; j < edgeCounts[to]; j++) {
                     edgeCounters[hardEdges[to][j]]++;
                 }
-                int connectinsCount = 0;
+                int connectionsCount = 0;
                 for (int i = from; i <= to; i++) {
-                    connectinsCount += edgeCounters[i];
+                    connectionsCount += edgeCounters[i];
                 }
-                boolean connectedOK = (connectinsCount == (to - from) * 2);
+                boolean connectedOK = (connectionsCount == (to - from) * 2);
                 if (connectedOK) {
                     result++;
                 }
             }
-
+            //backwards
+            for (int leftSideSliding = from; leftSideSliding < rowEnd; leftSideSliding++) {
+                for (int j = 0; j < edgeCounts[leftSideSliding]; j++) {
+                    edgeCounters[hardEdges[leftSideSliding][j]]--;
+                }
+                int connectionsCount = 0;
+                for (int i = leftSideSliding + 1; i < rowEnd; i++) {
+                    connectionsCount += edgeCounters[i];
+                }
+                boolean connectedOK = (connectionsCount == (rowEnd - leftSideSliding - 2) * 2);
+                if (connectedOK) {
+                    result++;
+                }
+            }
+            rowEnd--;
         }
         return result;
     }
