@@ -25,11 +25,26 @@ public class Solution {
             }
         }
 
+        int maxLength = 0;
+        for (ArrayList<Integer> l : edges) {
+            maxLength = Math.max(maxLength, l.size());
+        }
+
+        int[] edgeCounts = new int[A.length];
+        int[][] hardEdges = new int[A.length][maxLength];
+        for (int i = 0; i < A.length; i++) {
+            edgeCounts[i] = edges[i].size();
+            for (int j = 0; j < edgeCounts[i]; j++) {
+                hardEdges[i][j] = edges[i].get(j);
+            }
+        }
+
+
         for (int from = 0; from < A.length; from++) {
             int[] edgeCounters = new int[A.length];
             for (int to = from; to < A.length; to++) {
-                for (Integer v : edges[to]) {
-                    edgeCounters[v]++;
+                for (int j = 0; j < edgeCounts[to]; j++) {
+                    edgeCounters[hardEdges[to][j]]++;
                 }
                 int connectinsCount = 0;
                 for (int i = from; i <= to; i++) {
@@ -40,6 +55,7 @@ public class Solution {
                     result++;
                 }
             }
+
         }
         return result;
     }
