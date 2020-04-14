@@ -13,8 +13,8 @@ public class Solution {
     static int size = 0;
 
     public int solution(int[] A) {
-        //noinspection unchecked
         size = A.length;
+        //noinspection unchecked
         edges = new ArrayList[A.length];
         answers = new byte[A.length][A.length];
 
@@ -32,7 +32,7 @@ public class Solution {
             }
         }
 
-        for (int from = A.length - 1; from >= 0; from--) {
+        for (int from = A.length - 1; from >= 0; from--) { //from should be looped from higher values, so that recursive calls to lowers froms are possible
             int[] edgeCounters = new int[A.length];
             for (int to = from; to < A.length; to++) {
                 for (Integer v : edges[to]) {
@@ -51,10 +51,57 @@ public class Solution {
                     traverseInterconnectedTowardsLowerFrom(from, to);
                 } else {
                     answers[from][to] = NO;
+                    traverseDisconnectedTowardsLowerFrom(from, to);
                 }
             }
         }
         return result;
+    }
+
+    private void traverseDisconnectedTowardsLowerFrom(int from, int to) {
+        boolean noWayThisMayBeInterconnected = true;
+        while (noWayThisMayBeInterconnected) {
+            from--;
+            if (from < 0 || answers[from][to] != UNDEFINED) {
+                break;
+            }
+
+            noWayThisMayBeInterconnected = true;
+            for (int e : edges[from]) {
+                if (from <= e && e <= to) {
+                    noWayThisMayBeInterconnected = false;
+                    break;
+                }
+            }
+
+            if (noWayThisMayBeInterconnected) {
+                answers[from][to] = NO;
+//                traverseDisconnectedTowardsHigherTo(from, to);
+            }
+        }
+    }
+
+    private void traverseDisconnectedTowardsHigherTo(int from, int to) {
+        boolean noWayThisMayBeInterconnected = true;
+        while (noWayThisMayBeInterconnected) {
+            noWayThisMayBeInterconnected = false;
+            to++;
+
+            if (to >= size || answers[from][to] != UNDEFINED) {
+                return;
+            }
+
+            for (int e : edges[to]) {
+                if (e < from || to < e) {
+                    noWayThisMayBeInterconnected = true;
+                    break;
+                }
+            }
+            if (noWayThisMayBeInterconnected) {
+                answers[from][to] = NO;
+                traverseDisconnectedTowardsLowerFrom(from, to);
+            }
+        }
     }
 
     //to be called only if from-to are interconnected
