@@ -12,6 +12,8 @@ public class Solution {
     static byte NO = 2;
     static int size = 0;
     static int unnecessaryKittens = 0;
+    int[] edgeCounts;
+    int[][] hardEdges;
 
     public int solution(int[] A) {
         size = A.length;
@@ -33,11 +35,25 @@ public class Solution {
             }
         }
 
+        int maxLength = 0;
+        for (ArrayList<Integer> l : edges) {
+            maxLength = Math.max(maxLength, l.size());
+        }
+
+        edgeCounts = new int[A.length];
+        hardEdges = new int[A.length][maxLength];
+        for (int i = 0; i < A.length; i++) {
+            edgeCounts[i] = edges[i].size();
+            for (int j = 0; j < edgeCounts[i]; j++) {
+                hardEdges[i][j] = edges[i].get(j);
+            }
+        }
+
         for (int from = A.length - 1; from >= 0; from--) { //from should be looped from higher values, so that recursive calls to lowers froms are possible
             int[] edgeCounters = new int[A.length];
             for (int to = from; to < A.length; to++) {
-                for (Integer v : edges[to]) {
-                    edgeCounters[v]++;
+                for (int j = 0; j < edgeCounts[to]; j++) {
+                    edgeCounters[hardEdges[to][j]]++;
                 }
                 if (answers[from][to] != UNDEFINED) {
                     continue;
@@ -76,15 +92,13 @@ public class Solution {
     }
 
     private boolean isStillDisconnectedFromNextItem(int from, int to, int nextItem) {
-        boolean noWayThisMayBeInterconnected;
-        noWayThisMayBeInterconnected = true;
-        for (int e : edges[nextItem]) {
+        for (int j = 0; j < edgeCounts[nextItem]; j++) {
+            int e = hardEdges[nextItem][j];
             if (from <= e && e <= to) {
-                noWayThisMayBeInterconnected = false;
-                break;
+                return false;
             }
         }
-        return noWayThisMayBeInterconnected;
+        return true;
     }
 
     private void traverseDisconnectedTowardsHigherTo(int from, int to) {
@@ -124,15 +138,13 @@ public class Solution {
     }
 
     private boolean isInterconnectedWithNextItem(int from, int to, int nextItem) {
-        boolean isInterconnected;
-        isInterconnected = false;
-        for (int e : edges[nextItem]) {
+        for (int j = 0; j < edgeCounts[nextItem]; j++) {
+            int e = hardEdges[nextItem][j];
             if (from <= e && e <= to) {
-                isInterconnected = true;
-                break;
+                return true;
             }
         }
-        return isInterconnected;
+        return false;
     }
 
     //to be called only if from-to are interconnected
