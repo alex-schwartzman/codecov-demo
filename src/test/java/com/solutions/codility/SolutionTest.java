@@ -20,6 +20,11 @@ public class SolutionTest {
     }
 
     @Test
+    public void testAsDescribedInTask2WithACherryOnTheTop() {
+        assertEquals(4, new Solution().solution(new int[]{4, 5, 5, 4, 2, 2, 4}, 2));
+    }
+
+    @Test
     public void testAsDescribedInTask3() {
         assertEquals(4, new Solution().solution(new int[]{1, 3, 3, 2}, 2));
     }
