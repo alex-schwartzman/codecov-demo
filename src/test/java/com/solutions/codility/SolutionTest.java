@@ -10,6 +10,31 @@ import static org.junit.Assert.assertEquals;
 public class SolutionTest {
 
     @Test
+    public void testTheEndRoutine() {
+        assertEquals(6, new Solution().solution(new int[]{1, 1, 1, 1, 3, 3, 3}, 2));
+    }
+
+    @Test
+    public void testReOpenRoutineWithTail() {
+        assertEquals(7, new Solution().solution(new int[]{1, 1, 3, 1, 1, 1, 3, 3}, 2));
+    }
+
+    @Test
+    public void testReOpenRoutine() {
+        assertEquals(7, new Solution().solution(new int[]{1, 1, 3, 3, 1, 1, 1}, 2));
+    }
+
+    @Test
+    public void testReOpenRoutineWithTwoGapsOneIsBiggerThanK() {
+        assertEquals(4, new Solution().solution(new int[]{8, 1, 3, 1, 6, 7, 1}, 2));
+    }
+
+    @Test
+    public void testReOpenRoutineWithTwoBigGapsOneIsBiggerThanK() {
+        assertEquals(5, new Solution().solution(new int[]{8, 1, 3, 4, 5, 1, 6, 7, 1}, 3));
+    }
+
+    @Test
     public void testAsDescribedInTask1() {
         assertEquals(5, new Solution().solution(new int[]{1, 1, 3, 4, 3, 3, 4}, 2));
     }
