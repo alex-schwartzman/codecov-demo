@@ -98,7 +98,6 @@ public class SolutionTest {
     }
 
     @Test
-    @Ignore //for performance reasons :)
     public void testOn100kRandomArray() {
         final int size = 100000;
         int[] A = new int[size];
@@ -106,7 +105,7 @@ public class SolutionTest {
         for (int i = 0; i < A.length; i++) {
             A[i] = generator.nextInt(size / 2) + 1;
         }
-        assertEquals(7, new Solution().solution(A, 500));
+        assertEquals(503, new Solution().solution(A, 500));
     }
 
     @Test
@@ -141,14 +140,13 @@ public class SolutionTest {
 
 
     @Test
-    @Ignore //for performance reasons :)
     public void testOn30kOddEvenArray() {
         final int size = 300000;
         int[] A = new int[size];
         for (int i = 0; i < A.length; i++) {
             A[i] = i % 2 == 0 ? 1 : 2;
         }
-        assertEquals(99995, new Solution().solution(A, size / 2 - 3));
+        assertEquals(299995, new Solution().solution(A, size / 2 - 3));
     }
 
     @Test
@@ -173,7 +171,6 @@ public class SolutionTest {
 
 
     @Test
-    @Ignore //for performance reasons :)
     public void testOn100kContinuousArray() {
         final int size = 100000;
         int[] A = new int[size];
