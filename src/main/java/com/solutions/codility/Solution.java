@@ -8,7 +8,7 @@ import java.util.TreeSet;
 public class Solution {
 
     public int[] solution(int K, int M, int[] A) {
-        Set<Integer> results = new TreeSet<>();
+        Set<Integer> resultsSet = new TreeSet<>();
         int[] histogram = new int[M + 2];
 
         for (int i = 0; i < K; i++) {
@@ -18,7 +18,7 @@ public class Solution {
         for (int value : A) {
             histogram[value]++;
             if (histogram[value] > A.length / 2) {
-                results.add(value);
+                resultsSet.add(value);
             }
         }
 
@@ -35,13 +35,22 @@ public class Solution {
             A[endPosition]++;
             histogram[A[endPosition]]++;
 
-            if (histogram[A[endPosition]] > A.length / 2) {
-                results.add(A[endPosition]);
+            if (histogram[A[endPosition]] * 2 > A.length) {
+                resultsSet.add(A[endPosition]);
+            }
+            if (histogram[A[startPosition]] * 2 > A.length) {
+                resultsSet.add(A[startPosition]);
             }
             endPosition++;
             startPosition++;
         }
 
-        return results.stream().sorted().mapToInt(i -> i).toArray();
+        int[] resultInt = new int[resultsSet.size()];
+        int index = 0;
+        for (Integer r : resultsSet) {
+            resultInt[index] = r;
+            index++;
+        }
+        return resultInt;
     }
 }
