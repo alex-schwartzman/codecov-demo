@@ -10,9 +10,7 @@ public class Solution {
     static class CharHistogram {
         private final static int size = 'z' - 'a' + 10;
         private int[] histogram = new int[size];
-        private int[] backupHistogram = new int[size];
         int uniqueChars = 0;
-        int uniqueCharsBackup = 0;
 
         public void add(char c) {
             if (histogram[c - 'a'] == 0) {
@@ -28,23 +26,18 @@ public class Solution {
             }
         }
 
-        public void backup() {
-            backupHistogram = Arrays.copyOf(histogram, histogram.length);
-            uniqueCharsBackup = uniqueChars;
+        public void copyFrom(CharHistogram other) {
+            this.histogram = Arrays.copyOf(other.histogram, other.histogram.length);
+            this.uniqueChars = other.uniqueChars;
         }
-
-        public void restore() {
-            histogram = Arrays.copyOf(backupHistogram, histogram.length);
-            uniqueChars = uniqueCharsBackup;
-        }
-
     }
 
     public int solution(String S, int K) {
+        char[] inputString = S.toCharArray();
         CharHistogram histogram = new CharHistogram();
 
-        for (int i = 0; i < S.length(); i++) {
-            histogram.add(S.charAt(i));
+        for (char c : inputString) {
+            histogram.add(c);
         }
 
         if (histogram.uniqueChars < K) {
@@ -56,15 +49,16 @@ public class Solution {
         }
 
         if (K == 0) {
-            return S.length();
+            return  inputString.length;
         }
 
-        histogram.backup();
+        CharHistogram backupHistogram = new CharHistogram();
+        backupHistogram.copyFrom(histogram);
 
-        for (int substringLength = 1; substringLength < S.length() - K; substringLength++) {
+        for (int substringLength = 1; substringLength <=  inputString.length - K; substringLength++) {
             //first, adjust histogram to as if substring would be removed from the first bytes:
             for (int i = 0; i < substringLength; i++) {
-                histogram.remove(S.charAt(i));
+                histogram.remove(inputString[i]);
             }
 
             if (histogram.uniqueChars == K) {
@@ -74,9 +68,9 @@ public class Solution {
             int substringStart = 0;
             int substringEnd = substringLength;
 
-            while (substringEnd < S.length()) {
-                histogram.add(S.charAt(substringStart));
-                histogram.remove(S.charAt(substringEnd));
+            while (substringEnd < inputString.length) {
+                histogram.add(inputString[substringStart]);
+                histogram.remove(inputString[substringEnd]);
 
                 if (histogram.uniqueChars == K) {
                     return substringLength;
@@ -85,10 +79,9 @@ public class Solution {
                 substringStart++;
             }
 
-            //In the end, adjust histogram to as if substring tail would be recovered:
-            histogram.restore();
+            histogram.copyFrom(backupHistogram);
         }
 
-        return S.length();
+        return 8998899; //should never get here
     }
 }
