@@ -23,7 +23,6 @@ public class SolutionTest {
     }
 
     @Test
-    @Ignore
     public void testOnBiggerArrayInBeginning() {
         final int size = 500000;
         int[] A = new int[size];
@@ -32,6 +31,6 @@ public class SolutionTest {
             A[i] = (A.length - i) % 1000;
             B[i] = (i) % 1000;
         }
-        assertEquals(2, new Solution().solution(A, B, size / 2));
+        assertEquals(374500000, new Solution().solution(A, B, size / 2));
     }
 }
