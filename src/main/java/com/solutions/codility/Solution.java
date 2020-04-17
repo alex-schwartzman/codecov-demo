@@ -12,6 +12,7 @@ public class Solution {
         private int[] histogram = new int[size];
         private int[] backupHistogram = new int[size];
         int uniqueChars = 0;
+        int uniqueCharsBackup = 0;
 
         public void add(char c) {
             if (histogram[c - 'a'] == 0) {
@@ -29,10 +30,12 @@ public class Solution {
 
         public void backup() {
             backupHistogram = Arrays.copyOf(histogram, histogram.length);
+            uniqueCharsBackup = uniqueChars;
         }
 
         public void restore() {
             histogram = Arrays.copyOf(backupHistogram, histogram.length);
+            uniqueChars = uniqueCharsBackup;
         }
 
     }
@@ -58,7 +61,7 @@ public class Solution {
 
         histogram.backup();
 
-        for (int substringLength = 1; substringLength < S.length(); substringLength++) {
+        for (int substringLength = 1; substringLength < S.length() - K; substringLength++) {
             //first, adjust histogram to as if substring would be removed from the first bytes:
             for (int i = 0; i < substringLength; i++) {
                 histogram.remove(S.charAt(i));
