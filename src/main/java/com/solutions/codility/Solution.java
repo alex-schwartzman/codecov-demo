@@ -1,53 +1,54 @@
 package com.solutions.codility;
 
 import java.util.Arrays;
-import java.util.TreeSet;
+import java.util.Comparator;
 
 //https://app.codility.com/programmers/task/dream_team/
 //Divide developers into two teams to maximize their total contribution.
 //idea is to sort developers by best contribution to fronted team agains backend, and pick first F. Use TreeSet for it.
 public class Solution {
 
-    static class Developer implements Comparable<Developer> {
-        public int a;
-        public int b;
-        public int n;
-
-        public Developer(int a, int b, int n) {
-            this.a = a;
-            this.b = b;
-            this.n = n;
-        }
-
-        public int getOverallContribution() {
-            return a - b; //returns frontend-backend, i.e. if we get first F - we'll have best team
-        }
-
-        @Override
-        public int compareTo(Developer other) {
-            int contributionDifference = other.getOverallContribution() - this.getOverallContribution();
-            if (contributionDifference != 0) {
-                return contributionDifference > 0 ? 1 : -1;
-            } else {
-                return other.n > this.n ? 1 : -1;
-            }
-        }
-    }
+    int[] A;
+    int[] B;
+    int[] C;
+    Integer[] N;
 
     public int solution(int[] A, int[] B, int F) {
+        this.A = A;
+        this.B = B;
 
-        TreeSet<Developer> developers = new TreeSet<>();
+        N = new Integer[A.length];
+        C = new int[A.length];
+
         for (int i = 0; i < A.length; i++) {
-            developers.add(new Developer(A[i], B[i], i));
+            N[i] = i;
+            C[i] = A[i] - B[i];
         }
+
+        Arrays.sort(N, new Comparator<Integer>() {
+            @Override
+            public int compare(Integer n1, Integer n2) {
+                int contributionDifference = C[n2] - C[n1];
+                if (contributionDifference != 0) {
+                    return contributionDifference > 0 ? 1 : -1;
+                } else {
+                    return n1.compareTo(n2);
+                }
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return false;
+            }
+        });
 
         int counter = 0;
         int result = 0;
-        for (Developer d : developers) {
+        for (Integer n : N) {
             if (counter < F) {
-                result += d.a;
+                result += A[n];
             } else {
-                result += d.b;
+                result += B[n];
             }
             counter++;
         }
