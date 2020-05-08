@@ -1,54 +1,11 @@
 import java.util.*;
-import java.io.*;
-import java.math.*;
 
 /**
  * Grab the pellets as fast as you can!
  **/
 class Player {
 
-    public static final int ALIEN_LOCATION = -202;
-
-
-    static class Pac extends Coord {
-        public int id;
-        public String type;
-        public int abilityCoolDown;
-
-        public Pac(int x, int y, int id, String typeId, int abilityCooldown) {
-            super(x, y);
-            this.id = id;
-            this.type = typeId;
-            this.abilityCoolDown = abilityCooldown;
-        }
-
-        public boolean beats(Pac other) {
-            if (this.type.equals("ROCK") && other.type.equals("SCISSORS")) {
-                return true;
-            } else if (this.type.equals("SCISSORS") && other.type.equals("PAPER")) {
-                return true;
-            } else if (this.type.equals("PAPER") && other.type.equals("ROCK")) {
-                return true;
-            }
-            return false;
-        }
-    }
-
-
-    static class PacBrain {
-        public enum Directions {UP, DOWN, LEFT, RIGHT}
-
-        public Directions direction;
-        public Coord position;
-        public Pac currentState;
-
-        public void initDirection() {
-            direction = Directions.UP;
-        }
-
-    }
-
-    static class Coord implements Comparable<Coord> {
+    public static class Coord {
         public int x;
         public int y;
 
@@ -56,34 +13,197 @@ class Player {
             this.x = x;
             this.y = y;
         }
+    }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Coord)) return false;
-            Coord coord = (Coord) o;
-            return x == coord.x &&
-                    y == coord.y;
+    public static class GameMap {
+        private final int height;
+        private final int width;
+        private final Feature[][] map;
+
+        private enum Feature {WALL, FLOOR}
+
+        public GameMap(int width, int height) {
+            this.width = width;
+            this.height = height;
+            map = new Feature[height][width];
         }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(x, y);
+        public void addWall(int x, int y) {
+            map[y][x] = Feature.WALL;
         }
 
-        @Override
-        public int compareTo(Coord o) {
-            if (o.x > this.x) {
-                return 1;
+        public void addFloor(int x, int y) {
+            map[y][x] = Feature.FLOOR;
+        }
+
+        public Coord getCheckedCoord(Coord c, Pac.Direction direction) {
+            Coord result = new Coord(c.x, c.y);
+            switch (direction) {
+                case UP:
+                    result.y--;
+                    break;
+                case DOWN:
+                    result.y++;
+                    break;
+                case LEFT:
+                    result.x--;
+                    break;
+                case RIGHT:
+                    result.x++;
+                    break;
+                default:
+                    //nothing
             }
-            if (o.y > this.y) {
-                return 1;
-            }
-            return -1;
+            result.x %= width;
+            result.y %= height;
+            return result;
+        }
+
+        public boolean isWallThere(Coord c, Pac.Direction direction) {
+            final Coord destination = getCheckedCoord(c, direction);
+            return map[destination.y][destination.x] == Feature.WALL;
         }
     }
 
-    static String[] wallMap;
+    public static class MoveCommand {
+        private static String commandString = "MOVE";
+        private final Coord position;
+        private final int id;
+        private final String label;
+
+        public MoveCommand(int id, Coord position, String label) {
+            this.id = id;
+            this.position = position;
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return commandString + " " + id + " " + position.x + " " + position.y + " " + label;
+        }
+    }
+
+    public static class Pac {
+        public Direction direction;
+        public Coord position;
+
+        public Pac(Coord position, String typeId) {
+            this.position = position;
+            this.type = typeId;
+        }
+
+        public Pac() {
+        }
+
+        static final Direction[] directionSelectionOrder = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
+
+        private void reconsiderDirection(GameMap map) {
+            for (Direction d : directionSelectionOrder) {
+                if (d == oppositeDirection(direction)) {
+                    //we don't want to reverse just like that
+                    continue;
+                }
+                if (!map.isWallThere(position, d)) {
+                    direction = d;
+                    return;
+                }
+            }
+
+            //seems like reverse is the only option
+            direction = oppositeDirection(direction);
+        }
+
+        private Direction oppositeDirection(Direction direction) {
+            switch (direction) {
+                case UP:
+                    return Direction.DOWN;
+                case DOWN:
+                    return Direction.UP;
+                case LEFT:
+                    return Direction.RIGHT;
+                case RIGHT:
+                default:
+                    return Direction.LEFT;
+            }
+        }
+
+        public Object nextMove(int id, GameMap map) {
+            if (map.isWallThere(position, direction)) {
+                reconsiderDirection(map);
+            }
+            move(map);
+            return new MoveCommand(id, position, direction.toString());
+        }
+
+        private void move(GameMap map) {
+            position = map.getCheckedCoord(position, direction);
+        }
+
+        public void positionAndDirect(Coord position, GameMap map) {
+            this.position = position;
+            this.direction = Direction.UP;
+            reconsiderDirection(map);
+        }
+
+        public enum Direction {UP, DOWN, LEFT, RIGHT}
+
+        public String type;
+        public int speedTurnsLeft;
+        public int abilityCoolDown;
+    }
+
+    public static class Game {
+        private GameMap map;
+        private HashMap<Integer, Pac> enemyPacs = new HashMap<>();
+        private HashMap<Integer, Pac> myPacs = new HashMap<>();
+        private HashMap<Integer, Pac> myPacsHistory = new HashMap<>();
+
+        public String step() {
+            LinkedList<String> pacMoves = new LinkedList<>();
+            for (Map.Entry<Integer, Pac> p : myPacs.entrySet()) {
+                pacMoves.add(p.getValue().nextMove(p.getKey(), map).toString());
+            }
+            return String.join(" | ", pacMoves);
+        }
+
+        public void addMap(GameMap map) {
+            this.map = map;
+        }
+
+        public void updatePac(int pacId, boolean mine, int x, int y, String typeId, int speedTurnsLeft, int abilityCoolDown) {
+            final Coord position = new Coord(x, y);
+            if (mine) {
+                Pac pac;
+                if (!myPacsHistory.containsKey(pacId)) {
+                    pac = createNewPacWithProperDirection(position);
+                } else {
+                    pac = myPacsHistory.get(pacId);
+                }
+                pac.position = position;
+                pac.type = typeId;
+                pac.speedTurnsLeft = speedTurnsLeft;
+                pac.abilityCoolDown = abilityCoolDown;
+                myPacs.put(pacId, pac);
+                myPacsHistory.put(pacId, pac);
+            } else {
+                enemyPacs.put(pacId, new Pac(position, typeId));
+            }
+        }
+
+        private Pac createNewPacWithProperDirection(Coord position) {
+            final Pac pac = new Pac();
+            pac.positionAndDirect(position, map);
+            return pac;
+        }
+
+        public void setVisiblePellet(int x, int y, int value) {
+
+        }
+
+        public void initNextStep() {
+            myPacs = new HashMap<>();
+        }
+    }
 
     public static void main(String args[]) {
         Scanner in = new Scanner(System.in);
@@ -93,23 +213,27 @@ class Player {
             in.nextLine();
         }
 
-        HashSet<Coord> allUnrevealedCorners = new HashSet<>();
+        Game game = new Game();
 
-        wallMap = new String[height];
-        for (int i = 0; i < height; i++) {
-            wallMap[i] = in.nextLine(); // one line of the grid: space " " is floor, pound "#" is wall
-            for (int j = 0; j < wallMap[i].length(); j++) {
-                if (wallMap[i].charAt(j) == ' ') {
-                    allUnrevealedCorners.add(new Coord(j, i));
+        {
+            GameMap map = new GameMap(width, height);
+            for (int y = 0; y < height; y++) {
+                String row = in.nextLine(); // one line of the grid: space " " is floor, pound "#" is wall
+                for (int x = 0; x < row.length(); x++) {
+                    if (row.charAt(x) == '#') {
+                        map.addWall(x, y);
+                    } else {
+                        map.addFloor(x, y);
+                    }
                 }
             }
+
+            game.addMap(map);
         }
-        Map<Integer, PacBrain> pacBrains = new TreeMap<>();
 
         // game loop
         while (true) {
-            LinkedList<Pac> myPacs = new LinkedList<>();
-            HashSet<Pac> alienPacs = new HashSet<>();
+            game.initNextStep();
             int myScore = in.nextInt();
             int opponentScore = in.nextInt();
             int visiblePacCount = in.nextInt(); // all your pacs and enemy pacs in sight
@@ -121,164 +245,18 @@ class Player {
                 String typeId = in.next(); // unused in wood leagues
                 int speedTurnsLeft = in.nextInt(); // unused in wood leagues
                 int abilityCooldown = in.nextInt(); // unused in wood leagues
-                final Pac pac = new Pac(x, y, pacId, typeId, abilityCooldown);
-                if (mine) {
-                    myPacs.add(pac);
-                } else {
-                    alienPacs.add(pac);
-                }
+                game.updatePac(pacId, mine, x, y, typeId, speedTurnsLeft, abilityCooldown);
             }
             int visiblePelletCount = in.nextInt(); // all pellets in sight
-            Set<Coord> allExpensivePellets = new TreeSet<>();
-            LinkedList<Coord> allCheapPellets = new LinkedList<>();
-
-            int[][] pelletsMap = new int[height][width];
 
             for (int i = 0; i < visiblePelletCount; i++) {
                 int x = in.nextInt();
                 int y = in.nextInt();
                 int value = in.nextInt(); // amount of points this pellet is worth
-                pelletsMap[y][x] = value;
-
-                final Coord c = new Coord(x, y);
-                if (value > 1) {
-                    allExpensivePellets.add(c);
-                } else {
-                    allCheapPellets.add(c);
-                }
+                game.setVisiblePellet(x, y, value);
             }
 
-            for (Coord c : alienPacs) {
-                pelletsMap[c.y][c.x] = ALIEN_LOCATION;
-            }
-
-            for (Coord c : myPacs) {
-                allUnrevealedCorners.remove(new Coord(c.x, c.y));
-            }
-
-            for (Pac p : myPacs) {
-                if (!pacBrains.containsKey(p.id)) {
-                    pacBrains.put(p.id, new PacBrain());
-                    pacBrains.get(p.id).initDirection(wallMap);
-                }
-                pacBrains.get(p.id).currentState = p;
-            }
-
-            LinkedList<String> allInstructions = new LinkedList<>();
-
-            for (Pac p : myPacs) {
-                //collision avoid mode
-//                {
-//                    if (isThereAlienPac()) {
-//
-//                    }
-//                    Coord closestAlienPac = findClosestPellet(alienPacs, p);
-//                    if (closestAlienPac != null && directlyVisible(closestAlienPac, p)) {
-//                        if (((Pac) closestAlienPac).beats(p) && distance(p, closestAlienPac) < 9 && p.abilityCoolDown > 0) {
-//                            //dangerous situation - run away
-//
-//                        }
-//                    }
-//
-//                }
-                //chase mode
-                {
-                    Coord closestAlienPac = findClosestPellet(alienPacs, p);
-                    if (closestAlienPac != null && directlyVisible(closestAlienPac, p)) {
-                        if (p.beats((Pac) closestAlienPac) && distance(p, closestAlienPac) < 16) {
-                            if (p.abilityCoolDown == 0) {
-                                allInstructions.add("SPEED " + p.id + " CH" + ((Pac) closestAlienPac).id);
-                            } else {
-                                allInstructions.add("MOVE " + p.id + " " + closestAlienPac.x + " " + closestAlienPac.y + " CH" + ((Pac) closestAlienPac).id);
-                            }
-                            continue;
-                        }
-                        if (!p.beats((Pac) closestAlienPac) && distance(p, closestAlienPac) < 9) {
-                            if (p.abilityCoolDown == 0) {
-                                allInstructions.add("SWITCH " + p.id + " " + toBeat(((Pac) closestAlienPac).type));
-                                continue;
-                            }
-                        }
-                    }
-                }
-                //collectExpensive
-                {
-                    Coord c = findClosestPellet(allExpensivePellets, p);
-                    if (c != null) {
-                        if (p.abilityCoolDown == 0) {
-                            allInstructions.add("SPEED " + p.id + " EXP+");
-                        } else {
-                            allInstructions.add("MOVE " + p.id + " " + c.x + " " + c.y + " EXP");
-                        }
-                        continue;
-                    }
-                }
-                //wander
-                {
-                    Coord c = findClosestPellet(allUnrevealedCorners, p);
-                    allInstructions.add("MOVE " + p.id + " " + c.x + " " + c.y + " R");
-                }
-            }
-
-            System.out.println(String.join(" | ", allInstructions));
+            System.out.println(game.step());
         }
-    }
-
-    private static String toBeat(String type) {
-        if (type.equals("ROCK")) {
-            return "PAPER";
-        }
-        if (type.equals("PAPER")) {
-            return "SCISSORS";
-        }
-        return "ROCK";
-    }
-
-
-    private static boolean directlyVisible(Coord one, Coord another) {
-        if (one.x == another.x) {
-            //check there is no wall along
-            int maxY = Math.max(one.y, another.y);
-            int minY = Math.min(one.y, another.y);
-            for (int i = minY; i < maxY; i++) {
-                if (isWall(one.x, i)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        if (one.y == another.y) {
-            //check there is no wall along
-            int maxX = Math.max(one.x, another.x);
-            int minX = Math.min(one.x, another.x);
-            for (int i = minX; i < maxX; i++) {
-                if (isWall(i, one.y)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean isWall(int x, int y) {
-        return wallMap[y].charAt(x) != ' ';
-    }
-
-    static Coord findClosestPellet(Collection<? extends Coord> allPellets, Coord reference) {
-        Coord result = null;
-        double distance = Double.MAX_VALUE;
-        for (Coord c : allPellets) {
-            double currentDistance = distance(reference, c);
-            if (currentDistance < distance) {
-                distance = currentDistance;
-                result = c;
-            }
-        }
-        return result;
-    }
-
-    private static double distance(Coord reference, Coord c) {
-        return Math.pow(c.x - reference.x, 2) + Math.pow(c.y - reference.y, 2);
     }
 }
