@@ -5,6 +5,10 @@ import java.util.*;
  **/
 class Player {
 
+    public enum Direction {UP, DOWN, LEFT, RIGHT}
+
+    static final Player.Direction[] directionSelectionOrder = {Player.Direction.UP, Player.Direction.RIGHT, Player.Direction.DOWN, Player.Direction.LEFT};
+
     public static class Coord {
         public int x;
         public int y;
@@ -36,7 +40,7 @@ class Player {
             map[y][x] = Feature.FLOOR;
         }
 
-        public Coord getCheckedCoord(Coord c, Pac.Direction direction) {
+        public Coord getCheckedCoord(Coord c, Direction direction) {
             Coord result = new Coord(c.x, c.y);
             switch (direction) {
                 case UP:
@@ -59,9 +63,52 @@ class Player {
             return result;
         }
 
-        public boolean isWallThere(Coord c, Pac.Direction direction) {
+        public boolean isWallThere(Coord c, Direction direction) {
             final Coord destination = getCheckedCoord(c, direction);
             return map[destination.y][destination.x] == Feature.WALL;
+        }
+
+        private Player.Direction oppositeDirection(Player.Direction direction) {
+            switch (direction) {
+                case UP:
+                    return Player.Direction.DOWN;
+                case DOWN:
+                    return Player.Direction.UP;
+                case LEFT:
+                    return Player.Direction.RIGHT;
+                case RIGHT:
+                default:
+                    return Player.Direction.LEFT;
+            }
+        }
+
+        private Player.Direction clockwiseDirection(Player.Direction direction) {
+            switch (direction) {
+                case UP:
+                    return Player.Direction.RIGHT;
+                case DOWN:
+                    return Player.Direction.LEFT;
+                case LEFT:
+                    return Player.Direction.UP;
+                case RIGHT:
+                default:
+                    return Player.Direction.DOWN;
+            }
+        }
+
+        private Direction reconsiderDirection(Coord position, Direction direction) {
+            for (Player.Direction d : directionSelectionOrder) {
+                if (d == oppositeDirection(direction)) {
+                    //we don't want to reverse just like that
+                    continue;
+                }
+                if (!isWallThere(position, d)) {
+                    return d;
+                }
+            }
+
+            //seems like reverse is the only option
+            return oppositeDirection(direction);
         }
     }
 
@@ -95,44 +142,24 @@ class Player {
         public Pac() {
         }
 
-        static final Direction[] directionSelectionOrder = {Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT};
-
-        private void reconsiderDirection(GameMap map) {
-            for (Direction d : directionSelectionOrder) {
-                if (d == oppositeDirection(direction)) {
-                    //we don't want to reverse just like that
-                    continue;
-                }
-                if (!map.isWallThere(position, d)) {
-                    direction = d;
-                    return;
-                }
-            }
-
-            //seems like reverse is the only option
-            direction = oppositeDirection(direction);
-        }
-
-        private Direction oppositeDirection(Direction direction) {
-            switch (direction) {
-                case UP:
-                    return Direction.DOWN;
-                case DOWN:
-                    return Direction.UP;
-                case LEFT:
-                    return Direction.RIGHT;
-                case RIGHT:
-                default:
-                    return Direction.LEFT;
-            }
-        }
-
         public Object nextMove(int id, GameMap map) {
+            
+
             if (map.isWallThere(position, direction)) {
-                reconsiderDirection(map);
+                direction = map.reconsiderDirection(position, direction);
             }
+//            else {
+//                attemptTurnClockwise(map);
+//            }
             move(map);
             return new MoveCommand(id, position, direction.toString());
+        }
+
+        private void attemptTurnClockwise(GameMap map) {
+            final Player.Direction newDirection = map.clockwiseDirection(direction);
+            if (!map.isWallThere(position, newDirection)) {
+                direction = newDirection;
+            }
         }
 
         private void move(GameMap map) {
@@ -141,11 +168,8 @@ class Player {
 
         public void positionAndDirect(Coord position, GameMap map) {
             this.position = position;
-            this.direction = Direction.UP;
-            reconsiderDirection(map);
+            this.direction = map.reconsiderDirection(position, Direction.UP);
         }
-
-        public enum Direction {UP, DOWN, LEFT, RIGHT}
 
         public String type;
         public int speedTurnsLeft;
