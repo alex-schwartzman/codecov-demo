@@ -1,7 +1,46 @@
 package com.solutions.codility;
 
-import java.util.ArrayDeque;
 import java.util.Scanner;
+
+//E - Special Elements https://codeforces.com/contest/1352/problem/E https://codeforces.com/contest/1352/submission/79589579
+//public class Main {
+//
+//    public static void main(String[] args) {
+//        Scanner in = new Scanner(System.in);
+//        int count = in.nextInt();
+//        for (int i = 0; i < count; i++) {
+//            int elementsCount = in.nextInt();
+//            int[] elementsRow = new int[elementsCount];
+//            while (elementsCount-- > 0) {
+//                elementsRow[elementsCount] = in.nextInt();
+//            }
+//            System.out.println(solve(elementsRow));
+//        }
+//    }
+//
+//    public static int solve(int[] elementsRow) {
+//        int matchingNumbersCount = 0;
+//        final boolean[] answers = new boolean[10000]; //it's guaranteed to have sum no bigger than 8000
+//        for (int start = 0; start < elementsRow.length; start++) {
+//            int sumFromStart = elementsRow[start];
+//            for (int end = start + 1; end < elementsRow.length; end++) {
+//                sumFromStart += elementsRow[end];
+//                if (sumFromStart < answers.length) {
+//                    answers[sumFromStart] = true;
+//                }
+//            }
+//        }
+//
+//        for (int element : elementsRow) {
+//            if (answers[element]) {
+//                matchingNumbersCount++;
+//            }
+//        }
+//        return matchingNumbersCount;
+//    }
+//
+//}
+
 
 //D - Alice, Bob and Candies https://codeforces.com/contest/1352/problem/D https://codeforces.com/contest/1352/submission/79586038
 //public class Main {

@@ -11,6 +11,25 @@ import static org.junit.Assert.*;
 
 public class SolutionTest {
 
+//E - Special Elements https://codeforces.com/contest/1352/problem/E https://codeforces.com/contest/1352/submission/79589579
+//
+//    @Test
+//    public void testAsDescribed1() {
+//        assertEquals(5, Main.solve(new int[]{3, 1, 4, 1, 5, 9, 2, 6, 5}));
+//    }
+//
+//
+//    @Test
+//    public void testMyTest1() {
+//        assertEquals(0, Main.solve(new int[]{4, 4}));
+//    }
+//
+//    @Test
+//    public void testMyTest2() {
+//        assertEquals(0, Main.solve(new int[]{1}));
+//    }
+//
+
 //    //D - Alice, Bob and Candies https://codeforces.com/contest/1352/problem/D https://codeforces.com/contest/1352/submission/79586038
 //    @Test
 //    public void testMyTestNoLeadingZeros3() {
