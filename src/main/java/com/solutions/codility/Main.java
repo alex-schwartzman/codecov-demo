@@ -1,6 +1,38 @@
 package com.solutions.codility;
 
+import java.util.LinkedList;
 import java.util.Scanner;
+
+//G - Special Permutation https://codeforces.com/contest/1352/problem/G https://codeforces.com/contest/1352/submission/79592733
+//public class Main {
+//
+//    public static void main(String[] args) {
+//        Scanner in = new Scanner(System.in);
+//        int count = in.nextInt();
+//        for (int i = 0; i < count; i++) {
+//            System.out.println(solve(in.nextInt()));
+//        }
+//    }
+//
+//    public static String solve(int max) {
+//        if (max <= 3) {
+//            return "-1";
+//        } else {
+//            // ...max-8, max-6, max-4, max-2, max, max-3, max-1, max-5, max-7...
+//            LinkedList<String> result = new LinkedList<>();
+//            for (int growingSequence = 2 - max % 2; growingSequence <= max; growingSequence += 2) {
+//                result.add(String.valueOf(growingSequence));
+//            }
+//            result.add(String.valueOf(max - 3));
+//            result.add(String.valueOf(max - 1));
+//            for (int reducingSequence = max - 5; reducingSequence > 0; reducingSequence -= 2) {
+//                result.add(String.valueOf(reducingSequence));
+//            }
+//            return String.join(" ", result);
+//        }
+//    }
+//}
+
 
 //E - Special Elements https://codeforces.com/contest/1352/problem/E https://codeforces.com/contest/1352/submission/79589579
 //public class Main {

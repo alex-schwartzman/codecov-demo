@@ -11,6 +11,19 @@ import static org.junit.Assert.*;
 
 public class SolutionTest {
 
+//G - Special Permutation https://codeforces.com/contest/1352/problem/G https://codeforces.com/contest/1352/submission/79592733
+//
+//    @Test
+//    public void testAsDescribed1() {
+//        assertEquals("2 4 6 8 10 7 9 5 3 1", Main.solve(10));
+//    }
+//
+//    @Test
+//    public void testAsDescribed2() {
+//        assertEquals("-1", Main.solve(2));
+//    }
+//
+
 //E - Special Elements https://codeforces.com/contest/1352/problem/E https://codeforces.com/contest/1352/submission/79589579
 //
 //    @Test
