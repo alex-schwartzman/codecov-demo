@@ -1,21 +1,18 @@
+//package com.solutions.codility;
+
 import java.util.*;
 
-/**
- * Grab the pellets as fast as you can!
- **/
+//public
 class Player {
 
     public static final int PELLET_SCORE_MULTIPLIER = 10;
-    public static final int EMPTY_FLOOR_SCORE = 0;
-    public static final int UNVISITED_FLOOR_SCORE = 1;
+    public static final int EMPTY_FLOOR_SCORE = -3;
+    public static final int UNVISITED_FLOOR_SCORE = 10;
     public static final int MAX_AFFORDABLE_RECURSION_LIMIT = 30;
 
     public enum Direction {UP, DOWN, LEFT, RIGHT}
 
     static final Player.Direction[] directionSelectionOrder = {Player.Direction.UP, Player.Direction.RIGHT, Player.Direction.DOWN, Player.Direction.LEFT};
-
-    public static final HashSet<Coord> alreadyVisitedTiles = new HashSet<>();
-    public static final HashSet<Coord> nextStepPacs = new HashSet<>();
 
     public static class Coord {
         public int x;
@@ -39,6 +36,62 @@ class Player {
         public int hashCode() {
             return Objects.hash(x, y);
         }
+    }
+
+    public static class Navigator {
+
+        public static final HashSet<Coord> alreadyVisitedTiles = new HashSet<>();
+        public static final HashSet<Coord> nextStepPacs = new HashSet<>();
+        public GameMap map;
+
+        public Navigator(GameMap map) {
+            this.map = map;
+        }
+
+        private Player.Direction oppositeDirection(Player.Direction direction) {
+            switch (direction) {
+                case UP:
+                    return Player.Direction.DOWN;
+                case DOWN:
+                    return Player.Direction.UP;
+                case LEFT:
+                    return Player.Direction.RIGHT;
+                case RIGHT:
+                default:
+                    return Player.Direction.LEFT;
+            }
+        }
+
+        private Player.Direction clockwiseDirection(Player.Direction direction) {
+            switch (direction) {
+                case UP:
+                    return Player.Direction.RIGHT;
+                case DOWN:
+                    return Player.Direction.LEFT;
+                case LEFT:
+                    return Player.Direction.UP;
+                case RIGHT:
+                default:
+                    return Player.Direction.DOWN;
+            }
+        }
+
+        private Direction reconsiderDirection(Coord position, Direction direction) {
+            for (Player.Direction d : directionSelectionOrder) {
+                if (d == oppositeDirection(direction)) {
+                    //we don't want to reverse just like that
+                    continue;
+                }
+                if (!map.isWallThere(position, d)) {
+                    return d;
+                }
+            }
+
+            //seems like reverse is the only option
+            return oppositeDirection(direction);
+        }
+
+
     }
 
     public static class GameMap {
@@ -92,49 +145,6 @@ class Player {
         public boolean isWallAt(Coord destination) {
             return map[destination.y][destination.x] == Feature.WALL;
         }
-
-        private Player.Direction oppositeDirection(Player.Direction direction) {
-            switch (direction) {
-                case UP:
-                    return Player.Direction.DOWN;
-                case DOWN:
-                    return Player.Direction.UP;
-                case LEFT:
-                    return Player.Direction.RIGHT;
-                case RIGHT:
-                default:
-                    return Player.Direction.LEFT;
-            }
-        }
-
-        private Player.Direction clockwiseDirection(Player.Direction direction) {
-            switch (direction) {
-                case UP:
-                    return Player.Direction.RIGHT;
-                case DOWN:
-                    return Player.Direction.LEFT;
-                case LEFT:
-                    return Player.Direction.UP;
-                case RIGHT:
-                default:
-                    return Player.Direction.DOWN;
-            }
-        }
-
-        private Direction reconsiderDirection(Coord position, Direction direction) {
-            for (Player.Direction d : directionSelectionOrder) {
-                if (d == oppositeDirection(direction)) {
-                    //we don't want to reverse just like that
-                    continue;
-                }
-                if (!isWallThere(position, d)) {
-                    return d;
-                }
-            }
-
-            //seems like reverse is the only option
-            return oppositeDirection(direction);
-        }
     }
 
     public static class MoveCommand {
@@ -169,20 +179,23 @@ class Player {
         }
     }
 
-    public static class DirectionScore {
-        public Coord target;
-        public int score;
+    public static class NextJourney {
+        public int score = Integer.MIN_VALUE;
+        public LinkedList<Coord> stepsTrace = new LinkedList<>();
 
-        public DirectionScore(Coord target, int score) {
-            this.target = target;
-            this.score = score;
+        public NextJourney() {
+        }
+
+        public void addStep(Coord position, int score) {
+            stepsTrace.addFirst(position);
+            this.score += score;
         }
     }
 
     public static class Pac {
         public Direction direction;
         public Coord position;
-        private int recursionLimit = MAX_AFFORDABLE_RECURSION_LIMIT / 2;
+        private int recursionLimit = MAX_AFFORDABLE_RECURSION_LIMIT;
 
         public Pac(Coord position, String typeId) {
             this.position = position;
@@ -193,72 +206,69 @@ class Player {
         }
 
         //returns the score for the direction
-        public DirectionScore traverseRecursively(Coord position, GameMap map, HashMap<Coord, Integer> visiblePellets, int localRecursionLimit, HashMap<Coord, Integer> alreadyRecursed, HashSet<Coord> visiblePacs) {
-            if (map.isWallAt(position)
+        public NextJourney traverseRecursively(Coord position, Navigator navigator, HashMap<Coord, Integer> visiblePellets, int localRecursionLimit, HashMap<Coord, Integer> alreadyRecursed, HashSet<Coord> visiblePacs) {
+            if (navigator.map.isWallAt(position)
                     || localRecursionLimit == 0
                     || (alreadyRecursed.containsKey(position) && alreadyRecursed.get(position) > localRecursionLimit)
-                    || visiblePacs.contains(position)) {
-                return new DirectionScore(position, 0);
+                    || (visiblePacs.contains(position) && alreadyRecursed.size() > 0)) {
+                return null;
             } else {
                 int scoreForCurrentPosition = visiblePellets.containsKey(position) ? visiblePellets.get(position) * PELLET_SCORE_MULTIPLIER : EMPTY_FLOOR_SCORE;
-                if (!alreadyVisitedTiles.contains(position)) {
+                if (!Navigator.alreadyVisitedTiles.contains(position)) {
                     scoreForCurrentPosition += UNVISITED_FLOOR_SCORE;
                 }
                 alreadyRecursed.put(position, localRecursionLimit);
 
-                DirectionScore maxDirectionScore = new DirectionScore(position, 0);
+                NextJourney bestNextJourney = null;
                 for (Direction d : directionSelectionOrder) {
-                    DirectionScore tmpScore = traverseRecursively(map.getCheckedNextStep(position, d), map, visiblePellets, localRecursionLimit - 1, alreadyRecursed, visiblePacs);
-                    if (tmpScore.score > maxDirectionScore.score) {
-                        maxDirectionScore = tmpScore;
+                    NextJourney tmpScore = traverseRecursively(navigator.map.getCheckedNextStep(position, d), navigator, visiblePellets, localRecursionLimit - 1, alreadyRecursed, visiblePacs);
+                    if (bestNextJourney == null || (tmpScore != null && tmpScore.score > bestNextJourney.score)) {
+                        bestNextJourney = tmpScore;
                     }
                 }
-                maxDirectionScore.score += scoreForCurrentPosition;
-                return maxDirectionScore;
+
+                if (bestNextJourney == null) {
+                    bestNextJourney = new NextJourney();
+                }
+
+                bestNextJourney.addStep(position, scoreForCurrentPosition);
+                return bestNextJourney;
             }
         }
 
-        public Object nextMove(int id, GameMap map, HashMap<Coord, Integer> visiblePellets, HashSet<Coord> visiblePacs) {
+        public Object nextMove(int id, Navigator navigator, HashMap<Coord, Integer> visiblePellets, HashSet<Coord> visiblePacs) {
             if (abilityCoolDown == 0) {
                 return new SpeedCommand(id);
             }
 
-            recursionLimit = Math.min(recursionLimit - 1, MAX_AFFORDABLE_RECURSION_LIMIT - 1);
-            DirectionScore maxDirectionScore = new DirectionScore(map.getCheckedNextStep(position, direction), 0);
+            NextJourney bestNextJourney = traverseRecursively(position, navigator, visiblePellets, recursionLimit, new HashMap<>(), visiblePacs);
 
-            while (maxDirectionScore.score == 0 && recursionLimit < MAX_AFFORDABLE_RECURSION_LIMIT) {
-                for (Direction d : directionSelectionOrder) {
-                    DirectionScore tmpScore = traverseRecursively(map.getCheckedNextStep(position, d), map, visiblePellets, recursionLimit, new HashMap<>(), visiblePacs);
-                    if (tmpScore.score > maxDirectionScore.score) {
-                        maxDirectionScore = tmpScore;
-                        direction = d;
-                    }
+            if (bestNextJourney != null && bestNextJourney.stepsTrace.size() > 1) {
+                final LinkedList<Coord> stepsTrace = bestNextJourney.stepsTrace;
+
+                Coord myNextStep;
+                if (stepsTrace.size() > 2) {
+                    myNextStep = bestNextJourney.stepsTrace.get(2);
+                } else {
+                    myNextStep = bestNextJourney.stepsTrace.get(1);
                 }
-                if (maxDirectionScore.score == 0 || recursionLimit < 8) {
-                    //sad, did not find anything - increase the recursion limit then.
-                    recursionLimit *= 2;
-                }
+
+                return new MoveCommand(id, myNextStep, "R");
             }
 
-            Coord myNextStep = map.getCheckedNextStep(position, direction);
-
-            if (maxDirectionScore.score > 0 && !nextStepPacs.contains(myNextStep)) {
-                return new MoveCommand(id, maxDirectionScore.target, "R" + recursionLimit);
-            }
-
-            if (map.isWallAt(myNextStep)) {
-                direction = map.reconsiderDirection(position, direction);
+            if (navigator.map.isWallAt(navigator.map.getCheckedNextStep(position, direction))) {
+                direction = navigator.reconsiderDirection(position, direction);
             } else {
-                attemptTurnClockwise(map);
+                attemptTurnClockwise(navigator);
             }
 
-            move(map);
-            return new MoveCommand(id, position, "N" + recursionLimit);
+            move(navigator.map);
+            return new MoveCommand(id, position, "N");
         }
 
-        private void attemptTurnClockwise(GameMap map) {
-            final Player.Direction newDirection = map.clockwiseDirection(direction);
-            if (!map.isWallThere(position, newDirection)) {
+        private void attemptTurnClockwise(Navigator navigator) {
+            final Player.Direction newDirection = navigator.clockwiseDirection(direction);
+            if (!navigator.map.isWallThere(position, newDirection)) {
                 direction = newDirection;
             }
         }
@@ -267,9 +277,9 @@ class Player {
             position = map.getCheckedNextStep(position, direction);
         }
 
-        public void positionAndDirect(Coord position, GameMap map) {
+        public void positionAndDirect(Coord position, Navigator navigator) {
             this.position = position;
-            this.direction = map.reconsiderDirection(position, Direction.UP);
+            this.direction = navigator.reconsiderDirection(position, Direction.UP);
         }
 
         public String type;
@@ -278,24 +288,23 @@ class Player {
     }
 
     public static class Game {
-        private GameMap map;
+        private HashMap<Integer, Pac> myPacsHistory = new HashMap<>();
         private HashMap<Integer, Pac> enemyPacs = new HashMap<>();
         private HashMap<Integer, Pac> myPacs = new HashMap<>();
-        private HashMap<Integer, Pac> myPacsHistory = new HashMap<>();
         private HashMap<Coord, Integer> visiblePellets = new HashMap<>();
         private HashSet<Coord> visiblePacs = new HashSet<>();
+        private Navigator navigator;
 
+        public Game(GameMap map) {
+            navigator = new Navigator(map);
+        }
 
         public String step() {
             LinkedList<String> pacMoves = new LinkedList<>();
             for (Map.Entry<Integer, Pac> p : myPacs.entrySet()) {
-                pacMoves.add(p.getValue().nextMove(p.getKey(), map, visiblePellets, visiblePacs).toString());
+                pacMoves.add(p.getValue().nextMove(p.getKey(), navigator, visiblePellets, visiblePacs).toString());
             }
             return String.join(" | ", pacMoves);
-        }
-
-        public void addMap(GameMap map) {
-            this.map = map;
         }
 
         public void updatePac(int pacId, boolean mine, int x, int y, String typeId, int speedTurnsLeft, int abilityCoolDown) {
@@ -314,7 +323,7 @@ class Player {
                 pac.abilityCoolDown = abilityCoolDown;
                 myPacs.put(pacId, pac);
                 myPacsHistory.put(pacId, pac);
-                alreadyVisitedTiles.add(position);
+                Navigator.alreadyVisitedTiles.add(position);
             } else {
                 enemyPacs.put(pacId, new Pac(position, typeId));
             }
@@ -322,21 +331,19 @@ class Player {
 
         private Pac createNewPacWithProperDirection(Coord position) {
             final Pac pac = new Pac();
-            pac.positionAndDirect(position, map);
+            pac.positionAndDirect(position, navigator);
             return pac;
         }
 
         public void setVisiblePellet(int x, int y, int value) {
-            if (value > 2) {
-                visiblePellets.put(new Coord(x, y), value);
-            }
+            visiblePellets.put(new Coord(x, y), value);
         }
 
         public void initNextStep() {
             myPacs.clear();
             visiblePellets.clear();
             visiblePacs.clear();
-            nextStepPacs.clear();
+            Navigator.nextStepPacs.clear();
         }
     }
 
@@ -348,7 +355,7 @@ class Player {
             in.nextLine();
         }
 
-        Game game = new Game();
+        Game game;
 
         {
             GameMap map = new GameMap(width, height);
@@ -363,7 +370,7 @@ class Player {
                 }
             }
 
-            game.addMap(map);
+            game = new Game(map);
         }
 
         // game loop
