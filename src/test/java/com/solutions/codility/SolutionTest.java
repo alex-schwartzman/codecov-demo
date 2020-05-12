@@ -11,7 +11,53 @@ import static org.junit.Assert.assertEquals;
 public class SolutionTest {
 
     @Test
-    public void testSmallGameCircularRun() {
+    public void testNearestSuperPellet() {
+        List<String> asciiMap = Arrays.asList(
+                "########",
+                "#     *#",
+                "#.##*#.#",
+                " o####  ",
+                "########"
+        );
+
+        Player.Game game = initGame(asciiMap);
+
+        assertEquals("MOVE 0 7 3 H", game.step());
+    }
+
+    @Test
+    public void testShortestPathBlockedByWeakerEnemy() {
+        List<String> asciiMap = Arrays.asList(
+                "########",
+                "#e     #",
+                "#.#*##.#",
+                " o####  ",
+                "########"
+        );
+
+        Player.Game game = initGame(asciiMap);
+
+        assertEquals("MOVE 0 7 3 H", game.step());
+    }
+
+
+    @Test
+    public void testShortestPathBlockedBySameTypeEnemy() {
+        List<String> asciiMap = Arrays.asList(
+                "########",
+                "#c     #",
+                "#.#*##.#",
+                " o####  ",
+                "########"
+        );
+
+        Player.Game game = initGame(asciiMap);
+
+        assertEquals("MOVE 0 7 3 H", game.step());
+    }
+
+    @Test
+    public void testDecideBestRoute() {
         List<String> asciiMap = Arrays.asList(
                 "########",
                 "#      #",
@@ -37,7 +83,7 @@ public class SolutionTest {
 
         Player.Game game = initGame(asciiMap);
 
-        assertEquals("MOVE 0 6 3 R", game.step());
+        assertEquals("MOVE 0 1 2 H", game.step());
     }
 
 
@@ -66,8 +112,16 @@ public class SolutionTest {
                         game.updatePac(pacCounter, true, x, y, "ROCK", 0, 2);
                         map.addFloor(x, y);
                         break;
-                    case 'c':
+                    case 'c': //same-type enemy
                         game.updatePac(pacCounter, false, x, y, "ROCK", 0, 2);
+                        map.addFloor(x, y);
+                        break;
+                    case 'C': //stronger enemy
+                        game.updatePac(pacCounter, false, x, y, "PAPER", 0, 2);
+                        map.addFloor(x, y);
+                        break;
+                    case 'e': //weaker enemy
+                        game.updatePac(pacCounter, false, x, y, "SCISSORS", 0, 2);
                         map.addFloor(x, y);
                         break;
                     default:
