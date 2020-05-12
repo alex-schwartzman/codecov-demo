@@ -5,9 +5,17 @@ import java.util.*;
  **/
 class Player {
 
+    public static final int PELLET_SCORE_MULTIPLIER = 10;
+    public static final int EMPTY_FLOOR_SCORE = 0;
+    public static final int UNVISITED_FLOOR_SCORE = 1;
+    public static final int MAX_AFFORDABLE_RECURSION_LIMIT = 30;
+
     public enum Direction {UP, DOWN, LEFT, RIGHT}
 
     static final Player.Direction[] directionSelectionOrder = {Player.Direction.UP, Player.Direction.RIGHT, Player.Direction.DOWN, Player.Direction.LEFT};
+
+    public static final HashSet<Coord> alreadyVisitedTiles = new HashSet<>();
+    public static final HashSet<Coord> nextStepPacs = new HashSet<>();
 
     public static class Coord {
         public int x;
@@ -16,6 +24,20 @@ class Player {
         public Coord(int x, int y) {
             this.x = x;
             this.y = y;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Coord)) return false;
+            Coord coord = (Coord) o;
+            return x == coord.x &&
+                    y == coord.y;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(x, y);
         }
     }
 
@@ -40,7 +62,7 @@ class Player {
             map[y][x] = Feature.FLOOR;
         }
 
-        public Coord getCheckedCoord(Coord c, Direction direction) {
+        public Coord getCheckedNextStep(Coord c, Direction direction) {
             Coord result = new Coord(c.x, c.y);
             switch (direction) {
                 case UP:
@@ -58,13 +80,16 @@ class Player {
                 default:
                     //nothing
             }
-            result.x %= width;
-            result.y %= height;
+            result.x = (result.x + width) % width;
+            result.y = (result.y + height) % height;
             return result;
         }
 
         public boolean isWallThere(Coord c, Direction direction) {
-            final Coord destination = getCheckedCoord(c, direction);
+            return isWallAt(getCheckedNextStep(c, direction));
+        }
+
+        public boolean isWallAt(Coord destination) {
             return map[destination.y][destination.x] == Feature.WALL;
         }
 
@@ -130,9 +155,34 @@ class Player {
         }
     }
 
+    public static class SpeedCommand {
+        private static String commandString = "SPEED";
+        private final int id;
+
+        public SpeedCommand(int id) {
+            this.id = id;
+        }
+
+        @Override
+        public String toString() {
+            return commandString + " " + id;
+        }
+    }
+
+    public static class DirectionScore {
+        public Coord target;
+        public int score;
+
+        public DirectionScore(Coord target, int score) {
+            this.target = target;
+            this.score = score;
+        }
+    }
+
     public static class Pac {
         public Direction direction;
         public Coord position;
+        private int recursionLimit = MAX_AFFORDABLE_RECURSION_LIMIT / 2;
 
         public Pac(Coord position, String typeId) {
             this.position = position;
@@ -142,17 +192,68 @@ class Player {
         public Pac() {
         }
 
-        public Object nextMove(int id, GameMap map) {
-            
+        //returns the score for the direction
+        public DirectionScore traverseRecursively(Coord position, GameMap map, HashMap<Coord, Integer> visiblePellets, int localRecursionLimit, HashMap<Coord, Integer> alreadyRecursed, HashSet<Coord> visiblePacs) {
+            if (map.isWallAt(position)
+                    || localRecursionLimit == 0
+                    || (alreadyRecursed.containsKey(position) && alreadyRecursed.get(position) > localRecursionLimit)
+                    || visiblePacs.contains(position)) {
+                return new DirectionScore(position, 0);
+            } else {
+                int scoreForCurrentPosition = visiblePellets.containsKey(position) ? visiblePellets.get(position) * PELLET_SCORE_MULTIPLIER : EMPTY_FLOOR_SCORE;
+                if (!alreadyVisitedTiles.contains(position)) {
+                    scoreForCurrentPosition += UNVISITED_FLOOR_SCORE;
+                }
+                alreadyRecursed.put(position, localRecursionLimit);
 
-            if (map.isWallThere(position, direction)) {
-                direction = map.reconsiderDirection(position, direction);
+                DirectionScore maxDirectionScore = new DirectionScore(position, 0);
+                for (Direction d : directionSelectionOrder) {
+                    DirectionScore tmpScore = traverseRecursively(map.getCheckedNextStep(position, d), map, visiblePellets, localRecursionLimit - 1, alreadyRecursed, visiblePacs);
+                    if (tmpScore.score > maxDirectionScore.score) {
+                        maxDirectionScore = tmpScore;
+                    }
+                }
+                maxDirectionScore.score += scoreForCurrentPosition;
+                return maxDirectionScore;
             }
-//            else {
-//                attemptTurnClockwise(map);
-//            }
+        }
+
+        public Object nextMove(int id, GameMap map, HashMap<Coord, Integer> visiblePellets, HashSet<Coord> visiblePacs) {
+            if (abilityCoolDown == 0) {
+                return new SpeedCommand(id);
+            }
+
+            recursionLimit = Math.min(recursionLimit - 1, MAX_AFFORDABLE_RECURSION_LIMIT - 1);
+            DirectionScore maxDirectionScore = new DirectionScore(map.getCheckedNextStep(position, direction), 0);
+
+            while (maxDirectionScore.score == 0 && recursionLimit < MAX_AFFORDABLE_RECURSION_LIMIT) {
+                for (Direction d : directionSelectionOrder) {
+                    DirectionScore tmpScore = traverseRecursively(map.getCheckedNextStep(position, d), map, visiblePellets, recursionLimit, new HashMap<>(), visiblePacs);
+                    if (tmpScore.score > maxDirectionScore.score) {
+                        maxDirectionScore = tmpScore;
+                        direction = d;
+                    }
+                }
+                if (maxDirectionScore.score == 0 || recursionLimit < 8) {
+                    //sad, did not find anything - increase the recursion limit then.
+                    recursionLimit *= 2;
+                }
+            }
+
+            Coord myNextStep = map.getCheckedNextStep(position, direction);
+
+            if (maxDirectionScore.score > 0 && !nextStepPacs.contains(myNextStep)) {
+                return new MoveCommand(id, maxDirectionScore.target, "R" + recursionLimit);
+            }
+
+            if (map.isWallAt(myNextStep)) {
+                direction = map.reconsiderDirection(position, direction);
+            } else {
+                attemptTurnClockwise(map);
+            }
+
             move(map);
-            return new MoveCommand(id, position, direction.toString());
+            return new MoveCommand(id, position, "N" + recursionLimit);
         }
 
         private void attemptTurnClockwise(GameMap map) {
@@ -163,7 +264,7 @@ class Player {
         }
 
         private void move(GameMap map) {
-            position = map.getCheckedCoord(position, direction);
+            position = map.getCheckedNextStep(position, direction);
         }
 
         public void positionAndDirect(Coord position, GameMap map) {
@@ -181,11 +282,14 @@ class Player {
         private HashMap<Integer, Pac> enemyPacs = new HashMap<>();
         private HashMap<Integer, Pac> myPacs = new HashMap<>();
         private HashMap<Integer, Pac> myPacsHistory = new HashMap<>();
+        private HashMap<Coord, Integer> visiblePellets = new HashMap<>();
+        private HashSet<Coord> visiblePacs = new HashSet<>();
+
 
         public String step() {
             LinkedList<String> pacMoves = new LinkedList<>();
             for (Map.Entry<Integer, Pac> p : myPacs.entrySet()) {
-                pacMoves.add(p.getValue().nextMove(p.getKey(), map).toString());
+                pacMoves.add(p.getValue().nextMove(p.getKey(), map, visiblePellets, visiblePacs).toString());
             }
             return String.join(" | ", pacMoves);
         }
@@ -196,6 +300,7 @@ class Player {
 
         public void updatePac(int pacId, boolean mine, int x, int y, String typeId, int speedTurnsLeft, int abilityCoolDown) {
             final Coord position = new Coord(x, y);
+            visiblePacs.add(position);
             if (mine) {
                 Pac pac;
                 if (!myPacsHistory.containsKey(pacId)) {
@@ -209,6 +314,7 @@ class Player {
                 pac.abilityCoolDown = abilityCoolDown;
                 myPacs.put(pacId, pac);
                 myPacsHistory.put(pacId, pac);
+                alreadyVisitedTiles.add(position);
             } else {
                 enemyPacs.put(pacId, new Pac(position, typeId));
             }
@@ -221,11 +327,16 @@ class Player {
         }
 
         public void setVisiblePellet(int x, int y, int value) {
-
+            if (value > 2) {
+                visiblePellets.put(new Coord(x, y), value);
+            }
         }
 
         public void initNextStep() {
-            myPacs = new HashMap<>();
+            myPacs.clear();
+            visiblePellets.clear();
+            visiblePacs.clear();
+            nextStepPacs.clear();
         }
     }
 
